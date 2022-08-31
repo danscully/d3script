@@ -30,9 +30,10 @@ Track tools provide scripts to Duplicate, Split, Trim, and Move selected layers 
 
 # Combining with a control surface
 You can use these scripts either by the keyboard shortcuts they define, or by clicking on a button in the scripts menu.  You can also call them remotely.  To do that, set a "telnetConsolePort" in Machine Settings.  This will allow you to connect via TCP/telnet. From there, call the following to trigger a script.
-> "d3script.callScript(*filenameinquoteswithoutpy*,*functionnameinquotes*,*optionalstringparameterinquotes)" .  
+> "d3script.callScript(*filenameinquoteswithoutpy*,*functionnameinquotes*,*optionalstringparameterinquotes*)"  
+
 That function also supports an optional string parameter if the function requires a value to be passed to it, like 
-> "d3script.callScript('TrackTools','importLayerByName','MyLayer')".
+> "d3script.callScript('TrackTools','importLayerByName','MyLayer')"
 
 I use a streamdeck with Bitfocus Companion, which can send string commands over telnet.
 
