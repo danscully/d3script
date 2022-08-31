@@ -29,7 +29,10 @@ If you are using an ETC Eos based console, and need to manipulate a cue list for
 Track tools provide scripts to Duplicate, Split, Trim, and Move selected layers relative to the position of the playhead.  It also provides the ability to import a Layer from the Layer Library by name.  Combining this with the d3script.callScript() function lets you, say, create a key on a Streamdeck which will import a specific layer or group of layers onto the timeline.  I use this often when I see patterns of layers being used - such as file sets that always get played together ("There's a channel 1 and 2 to play...", or sometimes I'll have a hotkey that adds a layer with a "blob" that I can use to mask/shape content.  This file also contains a script that provides a keyboard shortcut (Alt+E) to toggle the engaged status.
 
 # Combining with a control surface
-You can use these scripts either by the keyboard shortcuts they define, or by clicking on a button in the scripts menu.  You can also call them remotely.  To do that, set a "telnetConsolePort" in Machine Settings.  This will allow you to connect via TCP/telnet. From there, call the "d3script.callScript(*filenameinquoteswithoutpy*,*functionnameinquotes*,*optionalstringparameterinquotes)" to trigger the script.  That function also supports an optional string parameter if the function requires a value to be passed to it, like "d3script.callScript('TrackTools','importLayerByName','MyLayer')".
+You can use these scripts either by the keyboard shortcuts they define, or by clicking on a button in the scripts menu.  You can also call them remotely.  To do that, set a "telnetConsolePort" in Machine Settings.  This will allow you to connect via TCP/telnet. From there, call the following to trigger a script.
+> "d3script.callScript(*filenameinquoteswithoutpy*,*functionnameinquotes*,*optionalstringparameterinquotes)" .  
+That function also supports an optional string parameter if the function requires a value to be passed to it, like 
+> "d3script.callScript('TrackTools','importLayerByName','MyLayer')".
 
 I use a streamdeck with Bitfocus Companion, which can send string commands over telnet.
 
