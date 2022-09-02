@@ -110,7 +110,7 @@ def renamePopup():
     menu.add(TextBox('$ for filename, @ to autoupdate, !name... to force exact name'))
     menu.editItem('Rename:', nameStem, doComboRename)
     menu.pos = (d3gui.root.size / 2) - (menu.size/2)
-    self.pos = Vec2(menu.pos[0],menu.pos[1]-100)
+    menu.pos = Vec2(menu.pos[0],menu.pos[1]-100)
 
     d3gui.root.add(menu)
     menu.contents.findWidgetByName('Rename:').textBox.focus = True
