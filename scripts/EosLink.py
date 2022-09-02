@@ -16,6 +16,7 @@ import d3script
 import socket
 
 
+
 def sendMessage(caller,msg,param = None):
 
     OSCAddrLength = math.ceil((len(msg)+1) / 4.0) * 4
@@ -123,7 +124,8 @@ class EosCueDelete(Widget):
         doButton = Button('Delete Cue',self.doCueDeletion)
         doButton.border = Vec2(0,10)
         self.add(doButton)
-        self.pos = d3gui.cursorPos + Vec2(64,-8)
+        self.pos = (d3gui.root.size / 2) - (self.size/2)
+        self.pos = Vec2(self.pos[0],self.pos[1]-100)
         d3gui.root.add(self)
 
     def doCueDeletion(self):
@@ -255,7 +257,10 @@ class EosCueCreator(Widget):
         doButton = Button('Create Cue',self.doCueCreation)
         doButton.border = Vec2(0,10)
         self.add(doButton)
-        self.pos = d3gui.cursorPos + Vec2(64,-8)
+        self.pos = (d3gui.root.size / 2) - (self.size/2)
+        
+        self.pos = Vec2(self.pos[0],self.pos[1]-100)
+
         d3gui.root.add(self)
 
     def doCueCreation(self):

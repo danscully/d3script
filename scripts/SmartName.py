@@ -91,6 +91,7 @@ def renamePopup():
     else:
         heading = 'Multiple layers'
 
+
     mediaName = ''
     if hasattr(selectedLayerObjects[0].module, 'video'):
             keyResource =  selectedLayerObjects[0].findSequence('video').sequence.key(0).r
@@ -108,7 +109,9 @@ def renamePopup():
     menu = PopupMenu('Rename %s' % heading)
     menu.add(TextBox('$ for filename, @ to autoupdate, !name... to force exact name'))
     menu.editItem('Rename:', nameStem, doComboRename)
-    menu.pos = d3gui.cursorPos + Vec2(64,-8)
+    menu.pos = (d3gui.root.size / 2) - (menu.size/2)
+    self.pos = Vec2(menu.pos[0],menu.pos[1]-100)
+
     d3gui.root.add(menu)
     menu.contents.findWidgetByName('Rename:').textBox.focus = True
 

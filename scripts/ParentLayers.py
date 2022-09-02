@@ -12,6 +12,7 @@ from gui.tickbox import SimpleTickBoxWidget
 import d3script
 
 
+
 class LayerParentPopup(Widget):
     parentLayer = 0
 
@@ -94,7 +95,7 @@ class LayerParentPopup(Widget):
         doButton = Button('Parent Layers',self.doParent)
         doButton.border = Vec2(0,10)
         self.add(doButton)
-        self.pos = d3gui.cursorPos + Vec2(64,-8)
+        self.pos = (d3gui.root.size / 2) - (self.size/2)
         d3gui.root.add(self)
 
     def doParent(self):
