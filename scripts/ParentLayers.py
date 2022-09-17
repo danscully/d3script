@@ -1,14 +1,9 @@
-# D3 Helpers
-from __future__ import print_function
+# Parent Layers
 from gui.inputmap import *
 from d3 import *
-from gui.track.layerview import LayerView
-from gui.track import TrackWidget
 import d3script
-import re
 import gui.widget
 import gui.alertbox
-from gui.tickbox import SimpleTickBoxWidget
 import d3script
 
 

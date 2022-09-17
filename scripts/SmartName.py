@@ -1,12 +1,8 @@
-# D3 Helpers
-from __future__ import print_function
+# Smart Name
 from gui.inputmap import *
 from d3 import *
-from gui.track.layerview import LayerView
-from gui.track import TrackWidget
 import d3script
 import re
-import gui.widget
 
 
 def initCallback():
@@ -115,6 +111,28 @@ def renamePopup():
     d3gui.root.add(menu)
     menu.contents.findWidgetByName('Rename:').textBox.focus = True
 
+
+def doGroup(groupName):
+
+    tw = d3script.getTrackWidget()
+    tw.layerView._groupSelected(groupName)
+
+
+def groupPopup():
+    """Open a popup menu to group """
+    selectedLayerObjects = d3script.getSelectedLayers()
+    if not selectedLayerObjects:
+        return
+
+    menu = PopupMenu('Group Selected Layers')
+    menu.editItem('Group Name:', 'Group', doGroup)
+    menu.pos = (d3gui.root.size / 2) - (menu.size/2)
+    menu.pos = Vec2(menu.pos[0],menu.pos[1]-100)
+
+    d3gui.root.add(menu)
+    menu.contents.findWidgetByName('Group Name:').textBox.focus = True
+
+
        
 
 SCRIPT_OPTIONS = {
@@ -128,7 +146,13 @@ SCRIPT_OPTIONS = {
             "bind_globally" : True, # binding should be global
             "help_text" : "Rename module based on properties", #text for help system
             "callback" : renamePopup, # function to call for the script
+        },
+        {
+            "name" : "Group Selected Layers", # Display name of script
+            "group" : "Smart Rename", # Group to organize scripts menu.  Scripts menu is sorted a separated by group
+            "bind_globally" : True, # binding should be global
+            "help_text" : "Rename module based on properties", #text for help system
+            "callback" : groupPopup, # function to call for the script
         }
-        ]
-
-    }
+    ]
+}

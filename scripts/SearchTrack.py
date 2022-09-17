@@ -1,13 +1,8 @@
 # SearchTrack
-from __future__ import print_function
 from gui.inputmap import *
 from d3 import *
-from gui.track.layerview import LayerView
-from gui.track import TrackWidget
 from gui.columnlistview import *
 import d3script
-import re
-import gui.widget
 
 
 
@@ -105,10 +100,6 @@ def doSearch(searchString):
         resName = l[1].description
         typeName = str(type(l[1]))
         outputRows.append((trackName,cueTag,cueLabel,layName,resName,typeName,lay))
-
-    #For Now print results
-    for row in outputRows:
-        print(row)
 
     d3script.log('searchTrack','Opening Results Window')
     showResults(outputRows)

@@ -1,16 +1,28 @@
-# D3 Helpers
-from __future__ import print_function
+# Track Tools
+from operator import truediv
 from gui.inputmap import *
 from d3 import *
-from gui.track.layerview import LayerView
-from gui.track import TrackWidget
+from gui.columnlistview import *
 import d3script
-import re
-import gui.widget
-
 
 def initCallback():
     d3script.log("scullyscripts","ScullyScripts Loaded")
+
+
+def hardMuteLayers():
+    lays = d3script.getSelectedLayers()
+
+    for lay in lays:
+        d3script.setExpression(lay,'brightness','0')
+        lay.name = 'MUTED ' + lay.name
+
+def hardUnMuteLayers():
+    lays = d3script.getSelectedLayers()
+
+    for lay in lays:
+        d3script.setExpression(lay,'brightness','self')
+        if (lay.name.find('MUTED') == 0):
+            lay.name = lay.name[6:]
 
 
 def toggleTransport():
@@ -36,7 +48,7 @@ def splitSelectedLayers():
     tw = d3script.getTrackWidget()
     lv = tw.layerView
     if len(lv.selectedLayerIDs) > 0:
-        selectedLayerObjects = lv.d3script.getSelectedLayers()
+        selectedLayerObjects = d3script.getSelectedLayers()
         t = tw.player.tCurrent
         lv.track.splitLayersAtBeat(selectedLayerObjects, t)
 
@@ -46,7 +58,7 @@ def moveSelectedLayersToPlayhead():
     tw = d3script.getTrackWidget()
     lv = tw.layerView
     if len(lv.selectedLayerIDs) > 0:    
-        selectedLayerObjects = lv.d3script.getSelectedLayers()
+        selectedLayerObjects = d3script.getSelectedLayers()
         t = tw.player.tCurrent
         map(lambda l: tw.barWidget.moveLayer(l,t), selectedLayerObjects) 
 
@@ -55,14 +67,162 @@ def trimSelectedLayersToPlayhead():
     tw = d3script.getTrackWidget()
     lv = tw.layerView
     if len(lv.selectedLayerIDs) > 0:    
-        selectedLayerObjects = lv.d3script.getSelectedLayers()
+        selectedLayerObjects = d3script.getSelectedLayers()
         t = tw.player.tCurrent
         for l in selectedLayerObjects:
             if l.tStart < t:
                 l.setExtents(l.tStart,t)
 
+
+def addEffectLayersToSelectedLayers(moduleName):
+    """Creates and effects layer and then matches it to an existing layer, and arrows and expression links it"""
+    lays = d3script.getSelectedLayers()
+
+    for lay in lays:
+        newLayer = d3script.createLayerOfTypeOnCurrentTrack(moduleName)
+
+        if newLayer == None:
+            d3script.log('TrackTools','Could not create effect layer of type: ' + moduleName)
+            continue
+
+        #set extents to match existing layer
+        newLayer.setExtents(lay.tStart,lay.tEnd)
+
+        #set the index
+        newLayer.tracks[0].moveLayerToIndex(newLayer,newLayer.tracks[0].findLayerIndex(lay) - 1)
+
+        #set the brightness of the effect layer to the expression link to the source layer
+        expString = 'module:' + d3script.expressionSafeString(lay.name) + '.brightness'
+        d3script.setExpression(newLayer, 'brightness', expString)
+
+        #set the blend mode directly to be the blendmode of the sourceLayer
+        layBmodeSeq = d3script.getFieldFromLayerByName(lay,'blendmode').sequence
+        bmode = layBmodeSeq.key(0).v
+
+        newLayBmodeSeq = d3script.getFieldFromLayerByName(newLayer,'blendmode').sequence
+        d3script.setKeyForLayerAtTime(newLayer,'blendmode',bmode,newLayBmodeSeq.key(0).localT)
+
+        #Set the mapping
+        layMappingSeq = d3script.getFieldFromLayerByName(lay,'mapping').sequence
+        mapping = layMappingSeq.key(0).r
+
+        newLayMappingSeq = d3script.getFieldFromLayerByName(newLayer,'mapping').sequence
+        d3script.setKeyForLayerAtTime(newLayer,'mapping',mapping,newLayMappingSeq.key(0).localT)
+
+        #Arrow the layers together
+        newLayer.tracks[0].makeArrow(lay,newLayer)
+
+
+def layerInSection(lay,scStart,scEnd):
+    if ((lay.tStart >= scStart) and (lay.tStart < scEnd) or 
+        (lay.tEnd >= scStart) and (lay.tEnd < scEnd) or 
+        (lay.tStart < scStart) and (lay.tEnd >= scEnd)):
+
+        return True
+
+    else:
+        return False
+
+
+def showSectionTimingInfo(trustNoSequence = False):
+
+    #get the section times
+    sects = state.track.sections
+    scIndex = sects.find(state.player.tCurrent)
+    scStart = sects.getT(scIndex)
+    scEnd = sects.getT(scIndex + 1)
+
+    # get all layers that intersect playhead
+    lays = filter(lambda l: layerInSection(l,scStart,scEnd),state.track.layers)
+
+    allLays = lays
+    for lay in lays:
+        if isinstance(lay, GroupLayer):
+            allLays += lay.layers
+
+    timedEvents = []
+
+    for lay in allLays:
+        if isinstance(lay,GroupLayer):
+            continue
+
+        flds = lay.fields
+        flds = filter(lambda f:f.noSequence == False,flds)
+
+        for fld in flds:
+            fs = fld.sequence
+            activeKeys = filter(lambda k:(k.localT >= scStart) and (k.localT < scEnd),fs.keys)
+            keyCount = len(activeKeys)
+            totalKeyCount = fs.nKeys()
+
+            #our key checks require at least two key frames.  But if we believe noSequence flag, one keyframe should be enough
+
+            if (trustNoSequence == True):
+                keysNeeded = 1
+            else:
+                keysNeeded = 2
+
+            if (fld.name == 'video') and (keyCount >= keysNeeded):
+
+                animDescription = '[' + str(keyCount) + '/' + str(totalKeyCount) + ']: '
+
+                for k in activeKeys:
+                    mediaTransField= d3script.getFieldFromLayerByName(lay,'transition time')
+                    t = mediaTransField.sequence.findCurrentKeyTime(k.localT)
+                    transKey = filter(lambda k: k.localT == t,mediaTransField.sequence.keys)[0]
+                    animDescription += '+' + str(round((k.localT - scStart), 2)) + '@' + k.r.description + '(' + str(transKey.v) + ') '
+
+                timedEvents.append((lay.name,fld.name,animDescription))
+
+            elif (fld.name != 'transition time') and (keyCount >= keysNeeded):
+
+                animDescription = '[' + str(keyCount) + '/' + str(totalKeyCount) + ']: '
+
+                for k in activeKeys:
+                    if (type(k) == KeyResource) and (k.r != None):
+                        if (k.r != None):
+                            val = k.r.description
+                        else:
+                            val = 'None'
+                    elif (type(k) == KeyFloat):
+                        val = str(round(k.v,4))
+                    else:
+                        val = str(k.v)
+
+                    animDescription += '+' + str(round((k.localT - scStart), 2)) + '@' + val + ' '
+
+                timedEvents.append((lay.name,fld.name,animDescription))
+
+    #Show results
+    columnNames = ['Layer','field','keys']
+
+    columns = []
+    for column in columnNames:
+        columns.append(ColumnListViewColumn(column,column,None))
+
+    resultWidget = Widget()
+    resultWidget.add(TitleButton('Section Timing Info'))
+
+    listWidget = ColumnListView(columns,maxSize=Vec2(1500, 800) * d3gui.dpiScale)
+    
+    rows = map(lambda x:ColumnListViewItem(x),timedEvents)
+
+    listWidget.items = rows
+    listWidget.recalculateColumnSizes()
+    resultWidget.add(listWidget)
+    resultWidget.arrangeVertical()
+    resultWidget.computeAllMinSizes()
+    d3gui.root.add(resultWidget)
+    resultWidget.pos = (d3gui.root.size / 2) - (resultWidget.size/2)
+    resultWidget.pos = Vec2(resultWidget.pos[0],resultWidget.pos[1]-100)
+
+
 def importLayerFromLibraryByName(layerName):
-    a = d3script.getTrackWidget().barWidget.popupBarMenu()
+    #Move cursor because the import function likes to move the playhead to the cursos
+    tw = d3script.getTrackWidget()
+    d3gui.cursorPos = Vec2(tw.barWidget.tToX(state.player.tCurrent) - tw.scrollWidget.hScroll.absOffset,d3gui.cursorPos[1])
+    
+    a = tw.barWidget.popupBarMenu()
     widgets = d3gui.root.children
 
     popup = None
@@ -156,6 +316,34 @@ SCRIPT_OPTIONS = {
             "bind_globally" : True, # binding should be global
             "help_text" : "Zoom Track to Frame Level", #text for help system
             "callback" : frameTrackZoom, # function to call for the script
+        },
+        {
+            "name" : "Hard Mute Layers", # Display name of script
+            "group" : "Track Tools", # Group to organize scripts menu.  Scripts menu is sorted a separated by group
+            "bind_globally" : True, # binding should be global
+            "help_text" : "Sets brightness expression of layer to 0", #text for help system
+            "callback" : hardMuteLayers, # function to call for the script
+        },
+        {
+            "name" : "Hard UnMute Layers", # Display name of script
+            "group" : "Track Tools", # Group to organize scripts menu.  Scripts menu is sorted a separated by group
+            "bind_globally" : True, # binding should be global
+            "help_text" : "Sets brightness of layer back to self and removes MUTED label", #text for help system
+            "callback" : hardUnMuteLayers, # function to call for the script
+        },
+        {
+            "name" : "Add Effect Layers to Selected Layers", # Display name of script
+            "group" : "Track Tools", # Group to organize scripts menu.  Scripts menu is sorted a separated by group
+            "bind_globally" : True, # binding should be global
+            "help_text" : "Sets brightness of layer back to self and removes MUTED label", #text for help system
+            "callback" : addEffectLayersToSelectedLayers, # function to call for the script
+        },
+        {
+            "name" : "Show Section Timing Info", # Display name of script
+            "group" : "Track Tools", # Group to organize scripts menu.  Scripts menu is sorted a separated by group
+            "bind_globally" : True, # binding should be global
+            "help_text" : "Find animated properties and reports on timing", #text for help system
+            "callback" : showSectionTimingInfo, # function to call for the script
         }
         ]
 
