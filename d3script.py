@@ -10,8 +10,12 @@
 import importlib
 from d3 import *
 import os
+import json
 import sys
-import gui
+import math
+import time
+import struct
+import socket
 import win32com.client
 
 
@@ -21,6 +25,7 @@ D3MAJORVERSION = ReleaseVersion.versionName
 D3MINORVERSION = ReleaseVersion.micro
 SCRIPTMENUTITLE = 'Script Menu'
 SCRIPTBUTTONTITLE = 'Scripts'
+NOTESTORAGENAME = 'd3scriptstoragenote_donottouch'
 scripts = []
 scriptMods = []
 debugmode = False
@@ -33,7 +38,58 @@ def log(sender, msg,debugOnly = False):
     ``debugOnly`` is an optional flag for messages only printed when ``d3script.debugMode`` is True
     """
     if (not debugOnly) or (debugMode):
-        print sender + ": " + msg
+        print (sender + ": " + msg)
+
+def callScript(module,func,param = None):
+    """
+    Calls a loaded script function directly.  Useful for firing scripts over the telnet console
+    """    
+    log('d3script','dispatching: ' + module + '.' + func)
+    funcCall = getattr(sys.modules[module],func)
+    if (param != None):
+        funcCall(param)
+    else:
+        funcCall()
+
+def sendOscMessage(device,msg,param = None):
+    """
+    Utility for sending OSC Messages.
+    Currently only allows one parameter.  Uses the info from a d3 OSC Device, but does not use the builtin functions
+    as messages are only supported on Directors and Actors.
+    """
+
+    log('d3script','Sending Eos msg: ' + msg + 'with param: ' + str(param))
+    
+    OSCAddrLength = math.ceil((len(msg)+1) / 4.0) * 4
+    packedMsg = struct.pack(">%ds" % (OSCAddrLength), str(msg))
+
+    if type(param) == str:
+        OSCTypeLength = math.ceil((len(',s')+1) / 4.0) * 4
+        packedType = struct.pack(">%ds" % (OSCTypeLength), str(',s'))
+        OSCArgLength = math.ceil((len(param)+1) / 4.0) * 4
+        packedParam = struct.pack(">%ds" % (OSCArgLength), str(param))
+
+    elif type(param) == float:
+        OSCTypeLength = math.ceil((len(',f')+1) / 4.0) * 4
+        packedType = struct.pack(">%ds" % (OSCTypeLength), str(',f'))
+        packedParam  = struct.pack(">f", float(param))
+
+    elif type(param) == int:
+        OSCTypeLength = math.ceil((len(',f')+1) / 4.0) * 4
+        packedType = struct.pack(">%ds" % (OSCTypeLength), str(',i'))
+        packedParam  = struct.pack(">i", int(param))
+
+    else:
+        packedType = ''
+        packedParam = ''
+
+    oscMsg = packedMsg + packedType + packedParam
+    sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    sock.sendto(oscMsg, (device.sendIPAddress, device.sendPort))
+    time.sleep(0.1)
+
+def getLayersOfTrackAtTime(trk,t):
+    return filter(lambda l:(l.tStart <= t) and (t <= l.tEnd),trk.layers)
 
 def findWidgetByName(name):
     """
@@ -43,6 +99,182 @@ def findWidgetByName(name):
     """
 
     return d3gui.root.findWidgetByName(name)
+
+def getPersistentValue(key):
+    """
+    Gets a persistent value.  d3script stores values as JSON in a special note in d3's note system.
+    """
+    
+    note = resourceManager.loadOrCreate('objects/note/'+NOTESTORAGENAME+'.apx',Note)
+    if len(note.text) > 0:
+        localDict = json.loads(note.text)
+    else:
+        return None
+
+    if localDict.has_key(key):
+        return localDict[key]
+    else:
+        return None
+
+
+def setPersistentValue(key,value):
+    """
+    Sets a persistent value which will exist across restarts.  d3script stores values as JSON in a special note in d3's note system.
+    """
+    note = resourceManager.loadOrCreate('objects/note/'+NOTESTORAGENAME+'.apx',Note)
+    if len(note.text) > 0:
+        localDict = json.loads(note.text)
+    else:
+        localDict = {}
+    
+    localDict[key] = value
+
+    note.text = json.dumps(localDict)
+
+
+def createLayerOfTypeOnCurrentTrack(moduleType):
+    """
+    Creates a new on the current Track of the type specified (by module name in New Layer popup).
+    Currently fakes UI interactions.
+    Returns the layer.
+    """
+
+    tw = getTrackWidget()
+    bw = tw.barWidget
+
+    bw.newUnnamedLayer()
+
+    cm = d3gui.root.findWidgetByName('Select type of layer')
+    if (cm == None):
+        log('d3script','Could not find Class Menu for create layer')
+    
+    #super fragile
+    grps = cm.parent.children[2].children[0].children
+
+    bts = []
+
+    for grp in grps:
+        for c in grp.children:
+            bts.append(c)
+    
+    bts = filter(lambda bt: type(bt) == Button,bts)
+
+    btn = filter(lambda bt: bt.name == moduleType,bts)
+    
+    if len(btn) != 1:
+        log('d3script','create layer could not find module of type: ' + moduleType)
+        return
+
+    # 'Press' the button to make the layer
+    btn[0].clickAction.doit()
+
+    # I assume this is super fragile as well
+    return state.track.layers[0]
+
+
+def getFieldFromLayerByName(lay, fieldName):
+    """Get the field by name from a layer"""
+    flds = filter(lambda x: x.name.lower() == fieldName.lower(),lay.fields)
+    if len(flds) == 1:
+        return flds[0]
+    else:
+        log('d3script','Could not find field: ' + fieldName + ' for layer: ' + lay.name)
+
+
+def setKeyForLayerAtTime(lay, fieldName, val, timeStart):
+    """creates a keyframe for value at time.  If key exists, delete key"""
+    """passing a string to a resource field will attempt to find the resource by name"""
+
+    def _findResourceByNameAndType(name,rt):
+        if type(name) == str:
+            vcs = resourceManager.allResources(rt)
+            vcs = filter(lambda v: v.description.lower() == name.lower(),r)
+
+            if len(vcs) == 1:
+                return vcs[0]
+            else:
+                return None
+                
+
+    timeStart = float(timeStart)
+
+    seq = getFieldFromLayerByName(lay,fieldName).sequence
+
+    # Find out what type of sequence we are dealing with
+    if isinstance(seq, ResourceSequence):
+        
+    # delineate between videos, mappings, and audio mappings
+    # and create full path to resource.
+
+        theRes = None
+        if fieldName == 'video':
+            resType = VideoClip
+
+        elif fieldName == 'mapping':
+            resType = Projection
+
+        elif fieldName == 'Output':
+            resType = LogicalAudioOutDevice
+
+        else:
+            log('d3script','Only resource sequences of "video", "mapping", or "Output" are supported as of now')
+            return
+
+
+        if type(val) == str:
+            theRes = _findResourceByNameAndType(val,resType)
+
+        elif isinstance(val,resType):
+            theRes = val
+
+        if (theRes) == None:
+            log('d3script','Could not find resource of right type with name ' + val)
+            return
+
+    # Remove key if it exists already
+        for key in range(seq.nKeys()):
+            if seq.keys[key].localT == timeStart:
+                seq.remove(key, timeStart)
+
+        seq.setResource(timeStart, theRes)
+
+    elif isinstance(seq, FloatSequence):
+        seq.setFloat(timeStart, float(val))
+
+    elif isinstance(seq, StringSequence):
+        seq.setStringAtT(timeStart, str(val))
+
+
+
+def expressionSafeString(text):
+    """
+    Convert string to be expression safe.
+    Replaces all punctuation with underscores
+    """
+
+    return text.replace('{','_').replace('}','_').replace('(','_').replace(')','_').replace(' ','_').replace('[','_').replace(']','_').replace('-','_')
+
+
+def setExpression(layer,fieldName,expression):
+    """
+    Sets an expression on the layer for the fieldName specified.  
+    Checks to make sure field is or type int or float to avoid issues with trying to set expressions on resource-backed fields.
+    """
+    fs = filter(lambda f:f.name == fieldName,layer.fields)
+
+    if len(fs) == 0:
+        log('d3script','Could not find field: '+ fieldName + ' for layer: ' + layer.name)
+        return
+    else:
+        fs = fs[0]
+
+    if (fs.type != int) and (fs.type != float):
+        log('d3script','Field is not int or float type.  Cannot set expression.')
+        return
+
+    fs.setExpression(expression)
+
+
 
 def simulateKeypress(key):
     """
@@ -87,17 +319,43 @@ def getSelectedLayers():
     """
     Get selected layers (if any) in the active track.
     """
-    tw = getTrackWidget():
+    tw = getTrackWidget()
     if tw:
-        return  = tw.layerView.getSelectedLayers()
+        return  tw.layerView.getSelectedLayers()
+
+
+def blendModeToString(mode):
+    modes = {
+        0.0 : 'Over',
+        1.0 : 'Alpha',
+        2.0 : 'Add',
+        3.0 : 'Mult',
+        4.0 : 'Mask',
+        5.0 : 'MultF',
+        6.0 : 'MultA',
+        7.0 : 'PreMultA',
+        8.0 : 'Scrn',
+        9.0 : 'Ovrly',
+        10.0 : 'Hard',
+        11.0 : 'Soft',
+        12.0 : 'Burn',
+        13.0 : 'Dark',
+        14.0 : 'Light',
+        15.0 : 'Diff',
+        16.0 : 'Excl',
+        17.0 : 'Dodge',
+        18.0 : 'HMix' }
+
+    return modes[mode]
+
 
 def guiSpacer(x,y):
     """
     create and return a spacer widget with the given sizes
     """
-        spacer = Widget()
-        spacer.minSize = Vec2(x * d3gui.dpiScale.x, y * d3gui.dpiScale.y)
-        return spacer
+    spacer = Widget()
+    spacer.minSize = Vec2(x * d3gui.dpiScale.x, y * d3gui.dpiScale.y)
+    return spacer
 
 def recursive_dir(obj, path):
     #if ((obj!=None) and (not isinstance(obj, (str,float,int,list,dict,set)))):
@@ -149,6 +407,10 @@ def load_scripts():
             log('d3script','Error while reloading ' + mod.__name__ + '. Error thrown during deletion/reload.')
 
     scriptMods = []
+
+    # Make sure scripts path exists
+    if not os.path.exists(SCRIPTSFOLDER):
+        os.mkdir(SCRIPTSFOLDER)
 
     # Add objects/pythonFile to the path
     if SCRIPTSFOLDER not in sys.path:
@@ -303,7 +565,7 @@ class ScriptMenu(Widget):
         self.add(self.titleButton)
         bt = Button('Reload Scripts',load_scripts)
         bt.border = Vec2(0,10)
-        self.updateAction.add(self.update)
+        #self.updateAction.add(self.update)
 
         self.add(bt)
         self.pos = d3gui.cursorPos + Vec2(64,-8)
@@ -323,7 +585,7 @@ class ScriptMenu(Widget):
             bt = Button(script['name'],script['callback'])
             bt.border = Vec2(0,12)
 
-            self.buttons.append(bt)
+            #self.buttons.append(bt)
             groupWidget.add(bt)
 
         d3gui.root.add(self)
