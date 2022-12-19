@@ -118,6 +118,16 @@ def doGroup(groupName):
     tw.layerView._groupSelected(groupName)
 
 
+def ungroupSelectedLayers():
+    op = Undoable('Ungroup selected layers')
+    lays = d3script.getSelectedLayers()
+
+    for lay in lays:
+        if not isinstance(lay,GroupLayer):
+            continue
+        for trk in lay.tracks:
+            trk.ungroupLayer(lay)
+
 def groupPopup():
     """Open a popup menu to group """
     selectedLayerObjects = d3script.getSelectedLayers()
@@ -151,8 +161,15 @@ SCRIPT_OPTIONS = {
             "name" : "Group Selected Layers", # Display name of script
             "group" : "Smart Rename", # Group to organize scripts menu.  Scripts menu is sorted a separated by group
             "bind_globally" : True, # binding should be global
-            "help_text" : "Rename module based on properties", #text for help system
+            "help_text" : "group selected layers", #text for help system
             "callback" : groupPopup, # function to call for the script
+        },
+        {
+            "name" : "UnGroup Selected Layers", # Display name of script
+            "group" : "Smart Rename", # Group to organize scripts menu.  Scripts menu is sorted a separated by group
+            "bind_globally" : True, # binding should be global
+            "help_text" : "Ungroup selectd layers", #text for help system
+            "callback" : ungroupSelectedLayers, # function to call for the script
         }
     ]
 }

@@ -8,6 +8,22 @@ import d3script
 def initCallback():
     d3script.log("scullyscripts","ScullyScripts Loaded")
 
+def deSequenceLayers():
+    op = Undoable('deSequence Layers')
+    lays = d3script.getSelectedLayers()
+    for lay in lays:
+    
+        if isinstance(lay,GroupLayer):
+            continue
+
+        flds = lay.fields
+        flds = filter(lambda f:((f.noSequence == False) and (f.sequence.nKeys() <= 1)),flds)
+
+        for fld in flds:
+            fs = fld.sequence
+            fs.stripToFirstKey()
+            fld.disableSequencing = True
+            
 
 def hardMuteLayers():
     lays = d3script.getSelectedLayers()
@@ -302,6 +318,13 @@ SCRIPT_OPTIONS = {
             "bind_globally" : True, # binding should be global
             "help_text" : "Import Layer from Library By Name", #text for help system
             "callback" : importLayerFromLibraryByName, # function to call for the script
+        },
+        {
+            "name" : "De-Sequence Layer", # Display name of script
+            "group" : "Track Tools", # Group to organize scripts menu.  Scripts menu is sorted a separated by group
+            "bind_globally" : True, # binding should be global
+            "help_text" : "Takes all single keyframe sequences and de-sequences them", #text for help system
+            "callback" : deSequenceLayers, # function to call for the script
         },
         {
             "name" : "Reset Track Zoom", # Display name of script

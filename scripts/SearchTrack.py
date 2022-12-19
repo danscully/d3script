@@ -11,7 +11,7 @@ def initCallback():
 
 
 
-def handleItemClick(item,colIndex):
+def handleItemClick(item,colIndex,resultsWidget):
     d3script.log('SearchTrack','item has been clicked')
     lay = item.values[6]
     if (type(lay) == Layer) and (len(lay.tracks) == 1):
@@ -20,7 +20,7 @@ def handleItemClick(item,colIndex):
         tm = d3.state.currentTransportManager
         trk = lay.tracks[0]
         trkTime = trk.findBeatOfLastTag(trk.timeToBeat(lay.tStart))
-        cmd.init(None, tm, trk, trk.timeToBeat(trkTime), trk.transitionInfoAtBeat(trkTime))
+        cmd.init(resultsWidget, tm, trk, trk.timeToBeat(trkTime), trk.transitionInfoAtBeat(trkTime))
         tm.addCommand(cmd)
 
 
@@ -40,7 +40,7 @@ def showResults(results):
 
     listWidget.items = rows
     listWidget.recalculateColumnSizes()
-    listWidget.itemColumnClickedAction = handleItemClick
+    listWidget.itemColumnClickedAction = (lambda item,colIndex: handleItemClick(item,colIndex,resultWidget))
 
     resultWidget.add(listWidget)
     resultWidget.arrangeVertical()
