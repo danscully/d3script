@@ -2,12 +2,12 @@
 This is the beginnings of a system to manage the loading and UI for external scripts in the d3/disguise media server.  This project is completely unsupported and sure to get support to throw your ticket in the trash.  Good luck!
 
 # How to use it
-To use, put d3script.py somewhere on the d3 Python sys.path.  Or, put it at the root of the project and in the Disguise Python Console (Alt-C) type:
+To use, put 'd3script.py' at the root of the project and in the Disguise Python Console (Alt-C) type:
 sys.path.append('./').  This will add the project root onto the Python search path.
 
 Then in the console, type "import d3script".  You should get a "Scripts" button at the end of the top status bar.
 
-For the included scripts, make a folder in the "objects" directory called "Scripts".  D3Script will automatically load any files in there when it is iniitially imported.  You can also rescan and reload this folder from the "Scripts" menu.
+For the included scripts, make a folder in the project root called "scripts".  D3Script will automatically load any files in there when it is iniitially imported.  You can also rescan and reload this folder from the "Scripts" menu.
 
 
 # What the included scripts do
@@ -26,7 +26,16 @@ This script provides a dialog to quickly expression link multiple layers.  Selec
 If you are using an ETC Eos based console, and need to manipulate a cue list for triggering d3, this script allows you to create and delete cues from Disguise.  Basically, running the "Create Cue..." script will let you create a cue in your cue list with the cue number and section note for the section at the current playhead position.  "Delete Cue..." will do the same, but delete a cue.  To use, you must set up an OSC device, and select it in the Create/Delete dialogs.  It also requires specifying the Eos User and Cuelist.  Those choices are remembered. 
 
 - TrackTools.py
-Track tools provide scripts to Duplicate, Split, Trim, and Move selected layers relative to the position of the playhead.  It also provides the ability to import a Layer from the Layer Library by name.  Combining this with the d3script.callScript() function lets you, say, create a key on a Streamdeck which will import a specific layer or group of layers onto the timeline.  I use this often when I see patterns of layers being used - such as file sets that always get played together ("There's a channel 1 and 2 to play...", or sometimes I'll have a hotkey that adds a layer with a "blob" that I can use to mask/shape content.  This file also contains a script that provides a keyboard shortcut (Alt+E) to toggle the engaged status.
+Track tools provide scripts to Duplicate, Split, Trim, and Move selected layers relative to the position of the playhead.  It also provides the ability to note/tag a section with the playhead at any point in that section, as well as the ability to tell you Section Timing Info.  It also provides the ability to import a Layer from the Layer Library by name. Combining this with the d3script.callScript() function lets you, say, create a key on a Streamdeck which will import a specific layer or group of layers onto the timeline.  I use this often when I see patterns of layers being used - such as file sets that always get played together ("There's a channel 1 and 2 to play...", or sometimes I'll have a hotkey that adds a layer with a "blob" that I can use to mask/shape content.  This file also provides a function to de-sequence all fields on selected layers, useful if you are upgrading an older show file where you have fields with 1 or 0 keyframes that you want desequenced.
+
+- StatusWidget.py
+Creates a one-stop-shop for status, including Up/Down/Hold status, transport Engaged status, Editor Locked/Independent status, and LTC status.  Also creates keyboard shortcuts and callable functions to manipulate those settings.
+
+- PresetManager.py
+Creates a preset system.  You can record a value(s) or keyframes as a preset and apply it with a button click, or with a script function call.  See code for "special" values.
+
+- EncoderLink.py
+Provides functions that are useful when combined with an external encoder, like the knobs on a Streamdeck plus.  
 
 # Combining with a control surface
 You can use these scripts either by the keyboard shortcuts they define, or by clicking on a button in the scripts menu.  You can also call them remotely.  To do that, set a "telnetConsolePort" in Machine Settings.  This will allow you to connect via TCP/telnet. From there, call the following to trigger a script.
@@ -38,13 +47,13 @@ That function also supports an optional string parameter if the function require
 I use a streamdeck with Bitfocus Companion, which can send string commands over telnet.
 
 # What d3Script does
-- Scans a folder (hardcoded to "./objects/Scripts") for modules (.py files or other more complex modules) and loads what it finds. 
+- Scans a folder (hardcoded to "./Scripts") for modules (.py files or other more complex modules) and loads what it finds. 
 
-- Processes a required dictionary in each loaded module with the name `SCRIPT_OPTIONS`.  This dictionary specifies min and max compatible versions, and optional initialization and destruction callbacks.  The loader checks for compatible versions and will only proceed if it is compatible.  See the example script `testScript.py` for more info on this dictionary.
+- Processes a required dictionary in each loaded module with the name `SCRIPT_OPTIONS`.  This dictionary specifies min and max compatible versions, and optional initialization and destruction callbacks.  The loader checks for compatible versions and will only proceed if it is compatible.  
 
 - This dictionary also has a "scripts" dictionary which describe available entrypoints.  Each "script" consists of a name, a group (for organizing in the Script Menu widget), a callback function, and an optional binding.  The loader takes each "script", and creates a widget with a collapsible panel for each group, and a button for each script on that panel.  If there is a binding, it also sets up that as well (its a bit of a hack at the moment).  Pressing the button or optional binding triggers the callback function.  That function could either do work or open another widget, depending on the scripter's goals.
 
-- The loader also adds a "Scripts" button to the state bar at the top. That button opens the Scripts Menu widget.  There is also an option to "Reload Scripts" on the Scripts Menu widget.  Pressing that calls the destructor callback on existing script modules, and rescans the scripts folder for new script modules, and reloads existing script modules.
+- The loader also adds a "Scripts" Widget to the top right of the UI, pinned open by default. There is also an option to "Reload Scripts" on the Scripts Menu widget.  Pressing that calls the destructor callback on existing script modules, and rescans the scripts folder for new script modules, and reloads existing script modules.
 
 - Provides a set of utility functions that are useful in making scripts for D3, such as getting the track widget, returning the selected layers in the timeline, etc.
 
