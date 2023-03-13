@@ -21,60 +21,145 @@ def toggleDirectorEngaged():
     else:
         state.currentTransportManager.engaged ^= 1
 
-def toggleLockToNetwork():
+def toggleLtcEngaged():
+
+    if (state.currentTransportManager.timecode == None):
+        ltc = filter(lambda x:x.description == 'ltc',resourceManager.allResources(TimecodeTransportLtc))
+        
+        if (len(ltc) == 1):
+            state.currentTransportManager.timecode = ltc[0]
+    
+    else:
+        state.currentTransportManager.timecode = None
+
+def switchToLtcVor():
+
+    ltcVor = filter(lambda x:x.description == 'ltc_vor',resourceManager.allResources(TimecodeTransportLtc))
+        
+    if (len(ltcVor) == 1):
+        state.currentTransportManager.timecode = ltcVor[0]
+
+
+def toggleLockToNetwork(goToLocal = False):
     d3.state.lockedToDirector = not d3.state.lockedToDirector
+
+    if goToLocal:
+        localTrack = state.track
+        localTime = state.player.tCurrent
 
     if not d3.state.lockedToDirector:
         #Stop playing
         tw = d3script.getTrackWidget()
         tw.children[2].children[0].children[4].clickAction.doit()
     
+    if goToLocal:
+        cmd = TransportCMDTrackBeat()
+        tm = d3.state.currentTransportManager
+        beat = localTrack.timeToBeat(localTime)
+        #this is hack-y to use root for the parent of the command
+        cmd.init(d3gui.root, tm, localTrack, beat, localTrack.transitionInfoAtBeat(beat))
+        tm.addCommand(cmd)
+
+def BringDirectorToEditorPlayhead():
+    toggleLockToNetwork(goToLocal = True)
 
 class StatusWidget(Widget):
     isStickyable = True
 
     def __init__(self):
+
+        #define colors
+        self.redColor = Colour(0.8, 0.0, 0.0)
+        self.greenColor = Colour(0.0, 0.8, 0.0)
+        self.purpleColor = Colour(0.5, 0.0, 0.5)
+        self.orangeColor = Colour(0.6, 0.4, 0.0)
+        self.defaultSize = Vec2(125,35)
+
         Widget.__init__(self)
-        rowHeight = 20
+
         self.resource = state.currentTransportManager
+        self.ltcResource = state.currentTransportManager.timecode
         self.arrangeHorizontal()
         self.updateAction.add(self.onUpdate)
 
         titleButton = TitleButton("Status:")
         self.add(titleButton)
+        
+
+        def makeStatusItem(label,val,size = self.defaultSize):
+            wd = Widget()
+            wd.arrangeVertical()
+            wd.overrideMinSize = lambda x: size
+            wd.add(TextLabel(label))
+            wd.add(val)
+            return wd
+
+        #self.currentCue = self.getTagForCurrentTime(state.localOrDirectorState().directorState())
+        #vb = ValueBox(self, 'currentCue', readonly=True)
+        #vb.textBox.fontSize(14)
+        #self.add(makeStatusItem('Director Cue:',vb))
+
+        self.localCue = self.getTagForCurrentTime(state.localOrDirectorState().localState())
+        vb = ValueBox(self, 'localCue', readonly=True)
+        vb.textBox.fontSize(14)
+        self.add(makeStatusItem('Local Cue:',vb))
+
+        #self.lastEvent = 'MIDI 753'
+        #vb = ValueBox(self, 'lastEvent', readonly=True)
+        #vb.textBox.fontSize(14)
+        #self.add(makeStatusItem('Last TP Event:',vb))
+
+        tcWidget = Widget()
+        tcWidget.arrangeHorizontal()
         vb = ValueBox(self.resource, 'monitorString', readonly=True)
         vb.textBox.fontSize(14)
-        vb.minSize = Vec2(200,rowHeight)
-        self.add(vb)
-        vb2 = ValueBox(self.resource, 'statusString', readonly=True)
-        vb2.minSize = Vec2(200,rowHeight)
-        self.add(vb2)
+        tcWidget.add(vb)
+        tcWidget.add(ValueBox(self.resource, 'statusString', readonly=True))
+        self.add(makeStatusItem('Timecode:',tcWidget,size=Vec2(200,35)))
         
         self.directorEngagedButton = Button('', toggleDirectorEngaged)
-        self.directorEngagedButton.minSize = Vec2(200,rowHeight)
+        self.directorEngagedButton.overrideMinSize = lambda x: self.defaultSize
         self.add(self.directorEngagedButton)
         self.updateDirectorEngagedButtonState()
+
+        self.ltcEngagedButton = Button('', toggleLtcEngaged)
+        self.ltcEngagedButton.overrideMinSize = lambda x: self.defaultSize
+        self.add(self.ltcEngagedButton)
+        self.updateLtcEngagedButtonState()
+
         self.lockToDirectorButton = Button('', toggleLockToNetwork)
+        self.lockToDirectorButton.overrideMinSize = lambda x: self.defaultSize
         self.add(self.lockToDirectorButton)
         self.updateNetworkLockedButtonState()
+
         modes = [tr('  Fade down  '), tr('  Fade up  '), tr('  Hold  ')]
         self.outputField = ValueBox(self, 'outputMode', modes).setHelpText('Controls fade up/down, hold, and visualiser mode')
         self.add(self.outputField)
-        #self.computeAllMinSizes()
-        self.minSize.x = 400
-        
+        self.maxSize.x = 1920
+    
+
 
     def onUpdate(self):
         self.updateDirectorEngagedButtonState()
+        self.updateLtcEngagedButtonState()
         self.updateNetworkLockedButtonState()
+
+        self.localCue = self.getTagForCurrentTime(state.localOrDirectorState().localState())
+        self.currentCue = self.getTagForCurrentTime(state.localOrDirectorState().directorState())
+
         output = state.localOrDirectorState().directorState().output
         if output == LocalState.FadeUp:
-            self.outputField.backCol  = Colour(0.0, 0.8, 0.0)
+            self.outputField.backCol  = self.greenColor
         elif output == LocalState.FadeDown: 
-            self.outputField.backCol  = Colour(0.5, 0.0, 0.5)
+            self.outputField.backCol  = self.purpleColor
         else:
-            self.outputField.backCol  = Colour(0.8, 0.0, 0.0)
+            self.outputField.backCol  = self.redColor
 
+
+    def getTagForCurrentTime(self, stateContext):
+        trk = stateContext.track
+        ply = stateContext.currentTransport.player
+        return trk.tagAtBeat(trk.findBeatOfLastTag(trk.timeToBeat(ply.tCurrent)))
 
     def onResourceChanged(self, resource):
         self.updateDirectorEngagedButtonState()
@@ -83,9 +168,17 @@ class StatusWidget(Widget):
         if hasattr(self, 'directorEngagedButton'):
             self.directorEngagedButton.name = 'Engaged' if self.resource.engaged else 'Disengaged'
             if self.resource.engaged:
-                self.directorEngagedButton.backCol = Colour(0.0, 0.8, 0.0)
+                self.directorEngagedButton.backCol = self.greenColor
             else:
-                self.directorEngagedButton.backCol = Colour(8.0, 0.0, 0.0)
+                self.directorEngagedButton.backCol = self.redColor
+
+    def updateLtcEngagedButtonState(self):
+        if hasattr(self, 'ltcEngagedButton'):
+            self.ltcEngagedButton.name = 'Ltc On' if self.resource.timecode != None else 'Ltc Off'
+            if self.resource.timecode != None:
+                self.ltcEngagedButton.backCol = self.greenColor
+            else:
+                self.ltcEngagedButton.backCol = self.redColor
 
     def updateNetworkLockedButtonState(self):
         if d3NetManager.mobileEditorMode:
@@ -94,11 +187,13 @@ class StatusWidget(Widget):
             self.lockToDirectorButton.setSuggestion('Timeline is locked to director' if d3.state.lockedToDirector else tr('Timeline is not locked to director'))
             
             if d3.state.lockedToDirector:
-                self.lockToDirectorButton.backCol = Colour(0.0, 0.8, 0.0)
+                self.lockToDirectorButton.backCol = self.greenColor
             else:
-                self.lockToDirectorButton.backCol = Colour(0.6, 0.4, 0.0)
+                self.lockToDirectorButton.backCol = self.orangeColor
         else:
-            self.lockToDirectorButton.hidden = True
+            #self.lockToDirectorButton.hidden = True
+            self.lockToDirectorButton.name = tr('Locked To Director')
+            self.lockToDirectorButton.backCol = self.greenColor 
 
     @property
     def outputMode(self):
@@ -136,30 +231,52 @@ SCRIPT_OPTIONS = {
     "scripts" : [
         {
             "name" : "Status Widget", # Display name of script
-            "group" : "Status widget", # Group to organize scripts menu.  Scripts menu is sorted a separated by group
+            "group" : "Status Widget", # Group to organize scripts menu.  Scripts menu is sorted a separated by group
             "bind_globally" : True, # binding should be global
             "help_text" : "Transport Controls without config", #text for help system
             "callback" : openStatusWidget, # function to call for the script
         },
         {
             "name" : "Toggle Transport", # Display name of script
-            "group" : "Status Widsget", # Group to organize scripts menu.  Scripts menu is sorted a separated by group
+            "group" : "Status Widget", # Group to organize scripts menu.  Scripts menu is sorted a separated by group
             "binding" : "KeyPress,Alt,e", # Keyboard shortcut
             "bind_globally" : True, # binding should be global
             "help_text" : "Toggle Transport State", #text for help system
             "callback" : toggleDirectorEngaged, # function to call for the script
         },
         {
+            "name" : "Toggle Ltc Transport", # Display name of script
+            "group" : "Status Widget", # Group to organize scripts menu.  Scripts menu is sorted a separated by group
+            "binding" : "KeyPress,Alt,t", # Keyboard shortcut
+            "bind_globally" : True, # binding should be global
+            "help_text" : "Toggle Ltc Transport", #text for help system
+            "callback" : toggleLtcEngaged, # function to call for the script
+        },
+        {
+            "name" : "Switch LTC to VOR", # Display name of script
+            "group" : "Status Widget", # Group to organize scripts menu.  Scripts menu is sorted a separated by group
+            "help_text" : "Toggle Ltc Transport", #text for help system
+            "callback" : switchToLtcVor, # function to call for the script
+        },
+        {
             "name" : "Toggle Locked to network", # Display name of script
-            "group" : "Status Widsget", # Group to organize scripts menu.  Scripts menu is sorted a separated by group
+            "group" : "Status Widget", # Group to organize scripts menu.  Scripts menu is sorted a separated by group
             "binding" : "KeyPress,Alt,l", # Keyboard shortcut
             "bind_globally" : True, # binding should be global
             "help_text" : "Toggle Locked to network", #text for help system
             "callback" : toggleLockToNetwork, # function to call for the script
         },
         {
+            "name" : "Bring Director To Editor Playhead", # Display name of script
+            "group" : "Status Widget", # Group to organize scripts menu.  Scripts menu is sorted a separated by group
+            "binding" : "KeyPress,Alt,g", # Keyboard shortcut
+            "bind_globally" : True, # binding should be global
+            "help_text" : "Bring Director To Editor Playhead", #text for help system
+            "callback" : BringDirectorToEditorPlayhead, # function to call for the script
+        },
+        {
             "name" : "Hold the Director", # Display name of script
-            "group" : "Status Widsget", # Group to organize scripts menu.  Scripts menu is sorted a separated by group
+            "group" : "Status Widget", # Group to organize scripts menu.  Scripts menu is sorted a separated by group
             "binding" : "KeyPress,Alt,h", # Keyboard shortcut
             "bind_globally" : True, # binding should be global
             "help_text" : "Hold output on the director", #text for help system
@@ -167,7 +284,7 @@ SCRIPT_OPTIONS = {
         },
         {
             "name" : "Fade Up the Director", # Display name of script
-            "group" : "Status Widsget", # Group to organize scripts menu.  Scripts menu is sorted a separated by group
+            "group" : "Status Widget", # Group to organize scripts menu.  Scripts menu is sorted a separated by group
             "binding" : "KeyPress,Alt,u", # Keyboard shortcut
             "bind_globally" : True, # binding should be global
             "help_text" : "Fade up output on the director", #text for help system
@@ -175,7 +292,7 @@ SCRIPT_OPTIONS = {
         },
         {
             "name" : "Fade Down the Director", # Display name of script
-            "group" : "Status Widsget", # Group to organize scripts menu.  Scripts menu is sorted a separated by group
+            "group" : "Status Widget", # Group to organize scripts menu.  Scripts menu is sorted a separated by group
             "binding" : "KeyPress,Alt,d", # Keyboard shortcut
             "bind_globally" : True, # binding should be global
             "help_text" : "Fade down output on the director", #text for help system

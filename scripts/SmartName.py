@@ -113,7 +113,7 @@ def renamePopup():
 
 
 def doGroup(groupName):
-
+    op = Undoable('group selected layers')
     tw = d3script.getTrackWidget()
     tw.layerView._groupSelected(groupName)
 

@@ -33,9 +33,8 @@ def openSequenceForProperty(p):
         m=filter(lambda f:f.fieldSequence.name == p,ole[x].fieldWrappers)
         for f in m:
             f.field.parent.expand()
-            if (f.fieldSequence.noSequence == True):
-                f.field.valueBox.selectValue()
-            else:
+            f.field.valueBox.selectValue()
+            if (f.fieldSequence.noSequence == False):
                 f.openSequence(True)
 
 

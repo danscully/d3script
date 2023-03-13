@@ -24,8 +24,31 @@ def deSequenceLayers():
             fs.stripToFirstKey()
             fld.disableSequencing = True
             
+def switchToTrack(track):
+    lds = state.localOrDirectorState()
+    currentTM = lds.transport
+
+    #multitransport
+    if isinstance(currentTM,MultiTransportManager):
+        tps = currentTM.transportManagers
+        for tp in tps:
+            if (tp.description == track):
+                lds.currentTransport = tp
+                break
+    
+    else:
+        tks = state.currentSetList.tracks
+        for tk in tks:
+            if (tk.description == track):
+                cmd = TransportCMDTrackBeat()
+                #this is hack-y to use root for the parent of the command
+                cmd.init(d3gui.root, currentTM, tk, 0, tk.transitionInfoAtBeat(0))
+                currentTM.addCommand(cmd)
+                break
+  
 
 def hardMuteLayers():
+    op = Undoable('deSequence Layers')
     lays = d3script.getSelectedLayers()
 
     for lay in lays:
@@ -33,6 +56,7 @@ def hardMuteLayers():
         lay.name = 'MUTED ' + lay.name
 
 def hardUnMuteLayers():
+    op = Undoable('deSequence Layers')
     lays = d3script.getSelectedLayers()
 
     for lay in lays:
@@ -55,12 +79,14 @@ def toggleTransport():
 
 def duplicateSelectedLayers():
     """Duplicate Selected Layers"""
+    op = Undoable('deSequence Layers')
     lv = d3script.getTrackWidget().layerView
     if len(lv.selectedLayerIDs) > 0:
         lv._duplicateSelected()
 
 def splitSelectedLayers():
     """Split selected layers"""
+    op = Undoable('deSequence Layers')
     tw = d3script.getTrackWidget()
     lv = tw.layerView
     if len(lv.selectedLayerIDs) > 0:
@@ -71,6 +97,7 @@ def splitSelectedLayers():
 
 def moveSelectedLayersToPlayhead():
     """Move selected layers to playhead"""
+    op = Undoable('deSequence Layers')
     tw = d3script.getTrackWidget()
     lv = tw.layerView
     if len(lv.selectedLayerIDs) > 0:    
@@ -80,6 +107,7 @@ def moveSelectedLayersToPlayhead():
 
 def trimSelectedLayersToPlayhead():
     """Trim selected layers to playhead"""
+    op = Undoable('deSequence Layers')
     tw = d3script.getTrackWidget()
     lv = tw.layerView
     if len(lv.selectedLayerIDs) > 0:    
@@ -92,6 +120,7 @@ def trimSelectedLayersToPlayhead():
 
 def addEffectLayersToSelectedLayers(moduleName):
     """Creates and effects layer and then matches it to an existing layer, and arrows and expression links it"""
+    op = Undoable('deSequence Layers')
     lays = d3script.getSelectedLayers()
 
     for lay in lays:
@@ -140,11 +169,11 @@ def layerInSection(lay,scStart,scEnd):
         return False
 
 
-def showSectionTimingInfo(trustNoSequence = False):
+def showSectionTimingInfo(trustNoSequence = True):
 
     #get the section times
     sects = state.track.sections
-    scIndex = sects.find(state.player.tCurrent)
+    scIndex = sects.find(state.player.tCurrent,state.player.tCurrent)
     scStart = sects.getT(scIndex)
     scEnd = sects.getT(scIndex + 1)
 
@@ -205,7 +234,13 @@ def showSectionTimingInfo(trustNoSequence = False):
                     else:
                         val = str(k.v)
 
-                    animDescription += '+' + str(round((k.localT - scStart), 2)) + '@' + val + ' '
+                    interpolationFlag = ''
+                    if (k.interpolation == k.linear):
+                        interpolationFlag = '[L]'
+                    elif (k.interpolation == k.select):
+                        interpolationFlag = '[S]'
+
+                    animDescription += '+' + str(round((k.localT - scStart), 2)) + interpolationFlag + '@' + val + ' '
 
                 timedEvents.append((lay.name,fld.name,animDescription))
 
@@ -278,11 +313,90 @@ def frameTrackZoom():
 
     tw.focusMe()
 
+class UpdateSectionTagAndNote(Widget):
+    """Open a popup menu with section rename options"""
+
+    def __init__(self):
         
+        self.trk = state.track
+        self.time = state.player.tCurrent
+        self.beat = self.trk.timeToBeat(state.player.tCurrent)
+        self.sectIndex = self.trk.beatToSection(self.beat)
+        self.sectStart = self.trk.sections.getT(self.sectIndex)
+
+        self.tagIndex = self.trk.tags.find(self.sectStart,self.sectStart)
+        if (self.tagIndex == -1) or (self.trk.tags.getT(self.tagIndex) != self.sectStart):
+            self.newTag = ""
+        else:
+            self.newTag = self.trk.tags.getV(self.tagIndex).split()[1]
+
+        
+        self.noteIndex = self.trk.notes.find(self.sectStart,self.sectStart)
+        if (self.noteIndex == -1) or (self.trk.notes.getT(self.noteIndex) != self.sectStart):
+            self.newNote = ""
+        else:
+            self.newNote = self.trk.notes.getV(self.noteIndex)
+
+        Widget.__init__(self)
+
+        self.arrangeVertical()
+        self.add(TitleButton("Update Section Tag / Note"))
+
+        gw = Widget()
+        gw.arrangeHorizontal()
+        gw.add(TextLabel('Cue / TC:'))
+        cueVB = ValueBox(self,'newTag')
+        gw.add(cueVB)
+        self.add(gw)
+        
+        gw2 = Widget()
+        gw2.arrangeHorizontal()
+        gw2.add(TextLabel('Note:'))
+        gw2.add(ValueBox(self,'newNote'))
+        self.add(gw2)
+        self.add(Button('OK', self.updateTagAndNote))
+
+        self.pos = (d3gui.root.size / 2) - (self.size/2)
+        d3gui.root.add(self)
+        cueVB.focus = True
+
+    @binding(KeyStroke,Keyboard.ENTER)
+    def updateTagAndNote(self):
+        op = Undoable('Update Tag and Note for Section')
+        if (self.newTag != ''):
+            if ":" in self.newTag:
+                self.newTag = "TC " + self.newTag
+            else:
+                self.newTag = "CUE " + self.newTag
+        
+        self.trk.setTagAtBeat(self.sectStart,self.newTag)
+        self.trk.setNoteAtBeat(self.sectStart, self.newNote)
+        self.close()
+
+def openTagAndNotePopup():
+    temp = UpdateSectionTagAndNote()
+
+def smartMergeCurrentSection():
+    op = Undoable('Smart Merge Current Section')
+    trk = state.track
+    time = state.player.tCurrent
+    sectStart = trk.sections.getT(trk.sections.find(time,time))
+    trk.sections.removeAtTime(sectStart)
+    trk.notes.removeAtTime(sectStart)
+    trk.tags.removeAtTime(sectStart)
+
+    
+
 SCRIPT_OPTIONS = {
     "minimum_version" : 21, # Min. compatible version
     "init_callback" : initCallback, # Init callback if version check passes
     "scripts" : [
+        {
+            "name" : "Change Track", # Display name of script
+            "group" : "Track Tools", # Group to organize scripts menu.  Scripts menu is sorted a separated by group
+            "help_text" : "Change track to passed name", #text for help system
+            "callback" : switchToTrack, # function to call for the script
+        },
         {
             "name" : "Toggle Transport", # Display name of script
             "group" : "Track Tools", # Group to organize scripts menu.  Scripts menu is sorted a separated by group
@@ -367,6 +481,20 @@ SCRIPT_OPTIONS = {
             "bind_globally" : True, # binding should be global
             "help_text" : "Find animated properties and reports on timing", #text for help system
             "callback" : showSectionTimingInfo, # function to call for the script
+        },
+        {
+            "name" : "Update Section Tag and Note", # Display name of script
+            "group" : "Track Tools", # Group to organize scripts menu.  Scripts menu is sorted a separated by group
+            "bind_globally" : True, # binding should be global
+            "help_text" : "Allows note and tag to be set for current section", #text for help system
+            "callback" : openTagAndNotePopup, # function to call for the script
+        },
+        {
+            "name" : "Smart Merge Section", # Display name of script
+            "group" : "Track Tools", # Group to organize scripts menu.  Scripts menu is sorted a separated by group
+            "bind_globally" : True, # binding should be global
+            "help_text" : "Merges current section and removes tag/notes", #text for help system
+            "callback" : smartMergeCurrentSection, # function to call for the script
         }
         ]
 
