@@ -43,32 +43,36 @@ Creates keyboard shortcuts for the most common layer editor properties.  For exa
 
 <br clear="right" />
 
-<img src="sampleimages/LayerColorManager.PNG" align="right" width="400px" />
+
 ## LayerColorManager.py
+<img src="sampleimages/LayerColorManager.PNG" align="right" width="400px" />
 Allows you to control the UI colors of layers on the timeline.  You can set different criteria based on layer name, status, module type, and module category.  Layers are matched based on the order of the criteria, starting at the top option, until a match is found.  THIS IS HIGHLY INVASIVE AND EXPERIMENTAL. I HAVE NOT THOROUGHLY TESTED THIS YET.
 
 <br clear="right" />
 
-<img src="sampleimages/LayerEditorImprovements.PNG" align="right" width="300px" />
+
 ## LayerEditorImprovements.py
+<img src="sampleimages/LayerEditorImprovements.PNG" align="right" width="300px" />
 Pins the max height of any open layer editor to the distance between the state bar and the top of the timeline track.  Also, pins the layer editor to the left edge of the screen.  Opening multiple layer editors will tile them out side by side from left to right. THIS IS HIGHLY INVASIVE AND EXPERIMENTAL. I HAVE NOT THOROUGHLY TESTED THIS YET.
 
 <br clear="right" />
 
-<img src="sampleimages/Parenting.PNG" align="right" width="400px" />
 ## Parenting.py
+<img src="sampleimages/Parenting.PNG" align="right" width="400px" />
 The Parent Layers script lets you automatically create expressions linking from multiple layers(children) to one primary layer(parent).  With multiple layers selected, run the script, and at the top choose a layer to be a parent.  You can then either check specific fields they have in common, or use the buttons to select groups of common layers.  The parent layer will have "EXPSRC" appended to its name since expressioning is currently based on names and will break if the parent is renamed.
 
 <br clear="right" />
 
-<img src="sampleimages/PresetManager.PNG" align="right" width="600px" />
+
 ## PresetManager.py
+<img src="sampleimages/PresetManager.PNG" align="right" width="600px" />
 The Preset Manager allows for the saving and recall of any numerical or index based property (e.g. no resources).  You can either use the buttons to save common sets of properties, or instead save the all the open sequences of the current layer editor.  You can also choose whether to save timing information or not.  Presets with timing information will use that timing info to animate properties, and will turn on sequencing on a property if applied to it.  You can right click on a preset to edit, rename, or delete it.  There are also special wildcards(see code) to allow you use the "current", "previous", or "next" value as a keyframe.  There is also a convenience script to allow you to apply presets by name (by connecting it do a streamdeck button, for example).
 
 <br clear="right" />
 
-<img src="sampleimages/ScreenConfig.PNG" align="right" width="200px" />
+
 ## ScreenConfigHelper.py
+<img src="sampleimages/ScreenConfig.PNG" align="right" width="200px" />
 The Screen Config Helper aids in and speeds up the creation of Animate Object presets.  It requires two objects to be created before use: "\_sctenmplate" is a animate object preset config that must contain the objects you want recorded when using the Helper, and "SCENERYMOVER" needs to be a layer in your current timeline where configs will be placed.   
 
 <br clear="right" />
@@ -82,8 +86,9 @@ Smart Rename will let you rename a file based on the filename of the media, and 
 Creates a one-stop-shop for status, including Up/Down/Hold status, transport Engaged status, Editor Locked/Independent status, and LTC status.  Also creates keyboard shortcuts and callable functions to manipulate those settings.
 <img src="sampleimages/StatusWidgetShortcuts.PNG" />
 
-<img src="sampleimages/TimelineImprovements.PNG" align="right" width="600px" />
+
 ## TimelineImprovements.py
+<img src="sampleimages/TimelineImprovements.PNG" align="right" width="600px" />
 Partially overrides the drawing of the track/timeline in order to add markers on layers to indicate the location of keyframes (if any) for that layer.  Also changes the "selected layer" drawing to instead be a bright yellow outline because I find the UI conventions between "selected layer" and "layer with editor opened" to be confusing.  THIS IS HIGHLY INVASIVE AND EXPERIMENTAL. I HAVE NOT THOROUGHLY TESTED THIS YET. 
 
 <br clear="right" />
@@ -92,8 +97,9 @@ Partially overrides the drawing of the track/timeline in order to add markers on
 <img src="sampleimages/TrackSearch.PNG" />
 Allows the user to search the track for videos, mappings, and layers that contain the given text.  You can filter the search by using one of the indicated prefixes.  Search results let you click on a found occurance and the timeline will jump to that occurance.  
 
-<img src="sampleimages/TrackTools.PNG" align="right" width="200px" />
+
 ## TrackTools.py
+<img src="sampleimages/TrackTools.PNG" align="right" width="200px" />
 Track tools provide scripts to Duplicate, Split, Trim, and Move selected layers relative to the position of the playhead.  It also provides the ability to note/tag a section with the playhead at any point in that section, as well as the ability to tell you Section Timing Info.  It also provides the ability to import a Layer from the Layer Library by name. Combining this with the d3script.callScript() function lets you, say, create a key on a Streamdeck which will import a specific layer or group of layers onto the timeline.  I use this often when I see patterns of layers being used - such as file sets that always get played together ("There's a channel 1 and 2 to play...", or sometimes I'll have a hotkey that adds a layer with a "blob" that I can use to mask/shape content.  This file also provides a function to de-sequence all fields on selected layers, useful if you are upgrading an older show file where you have fields with 1 or 0 keyframes that you want desequenced.  Additionally, there is a "Smart Merge Section" option that lets you merge the current section and deletes the cue tag and note at the head of the section being merged.
 
 <br clear="right" />
