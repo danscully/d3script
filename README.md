@@ -45,7 +45,7 @@ Creates keyboard shortcuts for the most common layer editor properties.  For exa
 
 
 ## LayerColorManager.py
-<img src="sampleimages/LayerColorManager.PNG" align="right" width="400px" />
+<img src="sampleimages/LayerColorManager.PNG" width="800px" />
 Allows you to control the UI colors of layers on the timeline.  You can set different criteria based on layer name, status, module type, and module category.  Layers are matched based on the order of the criteria, starting at the top option, until a match is found.  THIS IS HIGHLY INVASIVE AND EXPERIMENTAL. I HAVE NOT THOROUGHLY TESTED THIS YET.
 
 <br clear="right" />
