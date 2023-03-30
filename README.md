@@ -1,6 +1,7 @@
 # d3script
 <img src="sampleimages/menu.PNG" align="right" width="200px" />
 This is an unofficial scripting framework for external scripts in the d3/disguise media server.  Included is a loading mechanism, a menu UI, and a "standard library" of useful calls.  This project is completely unsupported by Disguise and myself and sure to get support to throw your ticket in the trash.  I recommend pairing it with a Streamdeck (or Loupedeck etc) and Bitfocus Companion to give yourself physical buttons to trigger scripts (see included sample Companion config).  I update this repo periodically as I make new scripts and improvements, but there is no formal release schedule or versioning.  There also many assumptions in the scripts provided.  For example, a script may require an existing layer with a specific name, etc.  Its always good to read the code looking for gotchas, and never use in Production unless you are comfortable owning the consequences.  As a rule, I only run these scripts on Editors, leaving the Director "clean" of my interference.
+<br clear="right" />
 
 # What d3Script does
 - Scans a folder (hardcoded to "./Scripts") for modules (.py files or other more complex modules) and loads what it finds. 
@@ -23,7 +24,11 @@ For the included scripts, make a folder in the project root called "scripts".  D
 
 
 # What the included scripts do
-There are currently four groups of scripts (gathered into four files) included in this release:
+There are currently fourteen groups of scripts included in this release:
+
+<img src="sampleimages/EosLink.PNG" align="right" width="600px" />
+- EosLink.py
+Ability to interact with an Eos lighting console.  Can create, delete, and retrigger cues in an Eos cuelist.  The create and delete widgets populate with the cue (e.g. tag) and label (e.g. note) for the current section.  Requires an OSC device to be setup for Eos.  The first time you run an EosLink script you should choose the OSC device from the dropdown list, and choose the user and cuelist defaults to use.
 
 - FieldShortcuts.py
 Creates keyboard shortcuts for the most common layer editor properties.  For example, if you have a layer editor open, pressing Ctrl-Shift-t will put keyboard focus on the Brightness field if the property is not animated, or open the keyframe editor for the field if it is animated.  It will also minimize all other field groups.  It's basically an attempt to recreate After Effects style shortcut keys for layer properties.  You can see all the keyboard shortcuts at the end of the file.
