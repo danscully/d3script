@@ -1,8 +1,6 @@
 # d3script
 <img src="sampleimages/menu.PNG" align="right" width="200px" />
-This is the beginnings of a system to manage the loading and UI for external scripts in the d3/disguise media server.  This project is completely unsupported and sure to get support to throw your ticket in the trash.  Good luck!
-
-<br clear="right" />
+This is an unofficial scripting framework for external scripts in the d3/disguise media server.  Included is a loading mechanism, a menu UI, and a "standard library" of useful calls.  This project is completely unsupported by Disguise and myself and sure to get support to throw your ticket in the trash.  I recommend pairing it with a Streamdeck (or Loupedeck etc) and Bitfocus Companion to give yourself physical buttons to trigger scripts (see included sample Companion config).
 
 # How to use it
 To use, put 'd3script.py' at the root of the project and in the Disguise Python Console (Alt-C) type:
