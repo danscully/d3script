@@ -5,9 +5,9 @@ This is an unofficial scripting framework for external scripts in the d3/disguis
 
 # How to use it
 To use, put 'd3script.py' at the root of the project and in the Disguise Python Console (Alt-C) type:
-sys.path.append('./').  This will add the project root onto the Python search path.
+"sys.path.append('./');import d3script",and hit enter.  This will add the project root onto the Python search path, and load the d3script standard library module.
 
-Then in the console, type "import d3script".  You should get a "Scripts" button at the end of the top status bar.
+<img src="sampleimages/ConsoleLoad.PNG" width="400px" />
 
 For the included scripts, make a folder in the project root called "scripts".  D3Script will automatically load any files in there when it is iniitially imported.  You can also rescan and reload this folder from the "Scripts" menu.
 
