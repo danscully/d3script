@@ -29,14 +29,16 @@ There are currently fourteen groups of scripts included in this release:
 ## EncoderLink.py
 Provides functions that are useful when combined with an external encoder, like the knobs on a Streamdeck plus.  Look at code and the Companion config for more information.
 
-<img src="sampleimages/EosLink.PNG" align="right" width="200px" />
+
 ## EosLink.py
+<img src="sampleimages/EosLink.PNG" align="right" width="200px" />
 Ability to interact with an Eos lighting console.  Can create, delete, and retrigger cues in an Eos cuelist.  The create and delete widgets populate with the cue (e.g. tag) and label (e.g. note) for the current section.  Requires an OSC device to be setup for Eos.  The first time you run an EosLink script you should choose the OSC device from the dropdown list, and choose the user and cuelist defaults to use.
 
 <br clear="right" />
 
-<img src="sampleimages/fieldshortcuts.PNG" align="right" width="400px" />
+
 ## FieldShortcuts.py
+<img src="sampleimages/fieldshortcuts.PNG" align="right" width="400px" />
 Creates keyboard shortcuts for the most common layer editor properties.  For example, if you have a layer editor open, pressing Ctrl-Shift-t will put keyboard focus on the Brightness field if the property is not animated, or open the keyframe editor for the field if it is animated.  It will also minimize all other field groups.  It's basically an attempt to recreate After Effects style shortcut keys for layer properties.
 
 <br clear="right" />
