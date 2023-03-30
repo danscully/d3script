@@ -86,6 +86,7 @@ Smart Rename will let you rename a file based on the filename of the media, and 
 ## StatusWidget.py
 <img src="sampleimages/StatusWidget.PNG" />
 Creates a one-stop-shop for status, including Up/Down/Hold status, transport Engaged status, Editor Locked/Independent status, and LTC status.  Also creates keyboard shortcuts and callable functions to manipulate those settings.
+<br />
 <img src="sampleimages/statusWidgetShortcuts.PNG" width="600px" />
 
 <br />
