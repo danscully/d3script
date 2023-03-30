@@ -45,7 +45,7 @@ Creates keyboard shortcuts for the most common layer editor properties.  For exa
 
 
 ## LayerColorManager.py
-<img src="sampleimages/LayerColorManager.PNG" width="800px" />
+<img src="sampleimages/LayerColorManager.PNG"/>
 Allows you to control the UI colors of layers on the timeline.  You can set different criteria based on layer name, status, module type, and module category.  Layers are matched based on the order of the criteria, starting at the top option, until a match is found.  THIS IS HIGHLY INVASIVE AND EXPERIMENTAL. I HAVE NOT THOROUGHLY TESTED THIS YET.
 
 <br clear="right" />
@@ -81,11 +81,14 @@ The Screen Config Helper aids in and speeds up the creation of Animate Object pr
 <img src="sampleimages/SmartRename.PNG" />
 Smart Rename will let you rename a file based on the filename of the media, and automatically appends the module, blendmode, and mapping ("Alpha" as a blendmode and "Video" as a module are not added because I assume them as a default).  This script assumes anything from the first occurance of "\[" onward is automatically updated data and will overwrite that in a name.  This script also will not touch layers with "EXPSRC" in the name as it assumes that layer is the source of an expression link and will be broken by renaming it.
 
+<br />
+
 ## StatusWidget.py
 <img src="sampleimages/StatusWidget.PNG" />
 Creates a one-stop-shop for status, including Up/Down/Hold status, transport Engaged status, Editor Locked/Independent status, and LTC status.  Also creates keyboard shortcuts and callable functions to manipulate those settings.
-<img src="sampleimages/StatusWidgetShortcuts.PNG" />
+<img src="sampleimages/statusWidgetShortcuts.PNG" width="300px" />
 
+<br />
 
 ## TimelineImprovements.py
 <img src="sampleimages/TimelineImprovements.PNG" align="right" width="600px" />
@@ -97,6 +100,7 @@ Partially overrides the drawing of the track/timeline in order to add markers on
 <img src="sampleimages/TrackSearch.PNG" />
 Allows the user to search the track for videos, mappings, and layers that contain the given text.  You can filter the search by using one of the indicated prefixes.  Search results let you click on a found occurance and the timeline will jump to that occurance.  
 
+<br />
 
 ## TrackTools.py
 <img src="sampleimages/TrackTools.PNG" align="right" width="200px" />
