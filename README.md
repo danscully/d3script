@@ -97,7 +97,7 @@ Partially overrides the drawing of the track/timeline in order to add markers on
 <br clear="right" />
 
 ## TrackSearch.py
-<img src="sampleimages/TrackSearch.PNG" />
+<img src="sampleimages/TrackSearch.PNG" width="300px"/>
 Allows the user to search the track for videos, mappings, and layers that contain the given text.  You can filter the search by using one of the indicated prefixes.  Search results let you click on a found occurance and the timeline will jump to that occurance.  
 
 <br />
