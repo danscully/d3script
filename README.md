@@ -1,6 +1,7 @@
 # d3script
 This is the beginnings of a system to manage the loading and UI for external scripts in the d3/disguise media server.  This project is completely unsupported and sure to get support to throw your ticket in the trash.  Good luck!
 
+<img src="sampleimages/menu.png" align="right" width="200px"/>
 # How to use it
 To use, put 'd3script.py' at the root of the project and in the Disguise Python Console (Alt-C) type:
 sys.path.append('./').  This will add the project root onto the Python search path.
