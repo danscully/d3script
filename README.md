@@ -78,7 +78,7 @@ The Screen Config Helper aids in and speeds up the creation of Animate Object pr
 <br clear="right" />
 
 ## SmartRename.py
-<img src="sampleimages/SmartRename.PNG" />
+<img src="sampleimages/SmartRename.PNG" width = "400px" />
 Smart Rename will let you rename a file based on the filename of the media, and automatically appends the module, blendmode, and mapping ("Alpha" as a blendmode and "Video" as a module are not added because I assume them as a default).  This script assumes anything from the first occurance of "\[" onward is automatically updated data and will overwrite that in a name.  This script also will not touch layers with "EXPSRC" in the name as it assumes that layer is the source of an expression link and will be broken by renaming it.
 
 <br />
@@ -86,7 +86,7 @@ Smart Rename will let you rename a file based on the filename of the media, and 
 ## StatusWidget.py
 <img src="sampleimages/StatusWidget.PNG" />
 Creates a one-stop-shop for status, including Up/Down/Hold status, transport Engaged status, Editor Locked/Independent status, and LTC status.  Also creates keyboard shortcuts and callable functions to manipulate those settings.
-<img src="sampleimages/statusWidgetShortcuts.PNG" width="300px" />
+<img src="sampleimages/statusWidgetShortcuts.PNG" width="600px" />
 
 <br />
 
