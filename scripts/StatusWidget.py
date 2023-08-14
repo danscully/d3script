@@ -5,10 +5,8 @@
 # Embedded file name: C:\blip\dev\scripts\gui\editor_transportmanager.py
 # Compiled at: 2022-08-24 05:53:19
 from d3 import *
-from functools import partial
 from gui.inputmap import *
 import d3script
-import re
 
 def toggleDirectorEngaged():
     tm = state.localOrDirectorState().transport
@@ -21,16 +19,18 @@ def toggleDirectorEngaged():
     else:
         state.currentTransportManager.engaged ^= 1
 
+
 def toggleLtcEngaged():
 
     if (state.currentTransportManager.timecode == None):
-        ltc = filter(lambda x:x.description == 'ltc',resourceManager.allResources(TimecodeTransportLtc))
+        ltc = filter(lambda x:x.description == 'ltc_main',resourceManager.allResources(TimecodeTransportLtc))
         
         if (len(ltc) == 1):
             state.currentTransportManager.timecode = ltc[0]
     
     else:
         state.currentTransportManager.timecode = None
+
 
 def switchToLtcVor():
 
@@ -60,8 +60,10 @@ def toggleLockToNetwork(goToLocal = False):
         cmd.init(d3gui.root, tm, localTrack, beat, localTrack.transitionInfoAtBeat(beat))
         tm.addCommand(cmd)
 
+
 def BringDirectorToEditorPlayhead():
     toggleLockToNetwork(goToLocal = True)
+
 
 class StatusWidget(Widget):
     isStickyable = True
@@ -73,7 +75,7 @@ class StatusWidget(Widget):
         self.greenColor = Colour(0.0, 0.8, 0.0)
         self.purpleColor = Colour(0.5, 0.0, 0.5)
         self.orangeColor = Colour(0.6, 0.4, 0.0)
-        self.defaultSize = Vec2(125,35)
+        self.defaultSize = Vec2(125 * d3gui.dpiScale.x,35 * d3gui.dpiScale.x)
 
         Widget.__init__(self)
 
@@ -115,7 +117,7 @@ class StatusWidget(Widget):
         vb.textBox.fontSize(14)
         tcWidget.add(vb)
         tcWidget.add(ValueBox(self.resource, 'statusString', readonly=True))
-        self.add(makeStatusItem('Timecode:',tcWidget,size=Vec2(200,35)))
+        self.add(makeStatusItem('Timecode:',tcWidget,size=Vec2(200 * d3gui.dpiScale.x,35 * d3gui.dpiScale.x)))
         
         self.directorEngagedButton = Button('', toggleDirectorEngaged)
         self.directorEngagedButton.overrideMinSize = lambda x: self.defaultSize
@@ -135,8 +137,7 @@ class StatusWidget(Widget):
         modes = [tr('  Fade down  '), tr('  Fade up  '), tr('  Hold  ')]
         self.outputField = ValueBox(self, 'outputMode', modes).setHelpText('Controls fade up/down, hold, and visualiser mode')
         self.add(self.outputField)
-        self.maxSize.x = 1920
-    
+        self.maxSize.x = 1920    
 
 
     def onUpdate(self):
@@ -161,8 +162,10 @@ class StatusWidget(Widget):
         ply = stateContext.currentTransport.player
         return trk.tagAtBeat(trk.findBeatOfLastTag(trk.timeToBeat(ply.tCurrent)))
 
+
     def onResourceChanged(self, resource):
         self.updateDirectorEngagedButtonState()
+
 
     def updateDirectorEngagedButtonState(self):
         if hasattr(self, 'directorEngagedButton'):
@@ -172,6 +175,7 @@ class StatusWidget(Widget):
             else:
                 self.directorEngagedButton.backCol = self.redColor
 
+
     def updateLtcEngagedButtonState(self):
         if hasattr(self, 'ltcEngagedButton'):
             self.ltcEngagedButton.name = 'Ltc On' if self.resource.timecode != None else 'Ltc Off'
@@ -179,6 +183,7 @@ class StatusWidget(Widget):
                 self.ltcEngagedButton.backCol = self.greenColor
             else:
                 self.ltcEngagedButton.backCol = self.redColor
+
 
     def updateNetworkLockedButtonState(self):
         if d3NetManager.mobileEditorMode:
@@ -195,9 +200,11 @@ class StatusWidget(Widget):
             self.lockToDirectorButton.name = tr('Locked To Director')
             self.lockToDirectorButton.backCol = self.greenColor 
 
+
     @property
     def outputMode(self):
         return state.localOrDirectorState().directorState().output
+
 
     @outputMode.setter
     def outputMode(self, v):
@@ -215,8 +222,10 @@ def openStatusWidget():
 def holdDirector():
         state.localOrDirectorState().directorState().output = LocalState.Hold
 
+
 def fadeUpDirector():
         state.localOrDirectorState().directorState().output = LocalState.FadeUp
+
 
 def fadeDownDirector():
         state.localOrDirectorState().directorState().output = LocalState.FadeDown

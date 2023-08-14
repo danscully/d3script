@@ -8,38 +8,8 @@ def initCallback():
     d3script.log("FieldShortcuts","FieldShortcuts Loaded")
 
 
-def closeSeparators():
-    ole = d3script.getTrackWidget().layerView.openEditorManager.openLayerEditors
-    for x in ole:  
-        v = ole[x].findDescendantsByType(CollapsableWidget)
-        w = list(v)
-        for i in w:
-            i.collapse()
-
-
-def closeAllSequences():
-    """Close all sequences in open editors"""
-    ole = d3script.getTrackWidget().layerView.openEditorManager.openLayerEditors  
-    for x in ole:    
-        for f in ole[x].fieldWrappers:
-            f.closeSequence()
-
-
-def openSequenceForProperty(p):
-    closeAllSequences()
-    closeSeparators()
-    ole = d3script.getTrackWidget().layerView.openEditorManager.openLayerEditors  
-    for x in ole: 
-        m=filter(lambda f:f.fieldSequence.name == p,ole[x].fieldWrappers)
-        for f in m:
-            f.field.parent.expand()
-            f.field.valueBox.selectValue()
-            if (f.fieldSequence.noSequence == False):
-                f.openSequence(True)
-
-
 def openAnimatedSequences():
-    closeSeparators()
+    d3script.closeAllLayerSeparators()
     ole = d3script.getTrackWidget().layerView.openEditorManager.openLayerEditors 
     for x in ole:    
         m=filter(lambda f:f.fieldSequence.sequence.nKeys() > 1,ole[x].fieldWrappers)
@@ -48,62 +18,52 @@ def openAnimatedSequences():
             f.openSequence(False)             
 
 
-def openLayerEditorPropertyGroup(group):
-    ole = d3script.getTrackWidget().layerView.openEditorManager.openLayerEditors 
-    for x in ole:   
-        v = ole[x].findDescendantsByType(CollapsableWidget)
-        w = list(v)
-        for i in w:
-            i.collapse()
-            if i.name == group:
-                i.expand()
-
 
 def doCloseAll():
-    closeAllSequences()
-    closeSeparators()
+    d3script.closeAllLayerSequences()
+    d3script.closeAllLayerSeparators()
 
 def openVideo():
-    openSequenceForProperty('video')
+    d3script.openLayerSequenceForProperty('video')
 
 def openOpacity():
-    openSequenceForProperty('brightness')
+    d3script.openLayerSequenceForProperty('brightness')
 
 def openPosX():
-    openSequenceForProperty('pos.x')
+    d3script.openLayerSequenceForProperty('pos.x')
 
 def openPosY():
-    openSequenceForProperty('pos.y')
+    d3script.openLayerSequenceForProperty('pos.y')
 
 def openScaleX():
-    openSequenceForProperty('scale.x')
+    d3script.openLayerSequenceForProperty('scale.x')
 
 def openScaleY():
-    openSequenceForProperty('scale.y')
+    d3script.openLayerSequenceForProperty('scale.y')
 
 def openSize():
-    openSequenceForProperty('size')
+    d3script.openLayerSequenceForProperty('size')
 
 def openBlend():
-    openSequenceForProperty('blendMode')
+    d3script.openLayerSequenceForProperty('blendMode')
 
 def openColourX():
-    openSequenceForProperty('xCol')
+    d3script.openLayerSequenceForProperty('xCol')
 
 def openColourY():
-    openSequenceForProperty('yCol')
+    d3script.openLayerSequenceForProperty('yCol')
 
 def openRot():
-    openSequenceForProperty('rotation')
+    d3script.openLayerSequenceForProperty('rotation')
 
 def openMapping():
-     openSequenceForProperty('mapping')
+    d3script.openLayerSequenceForProperty('mapping')
 
 def openColourShift():
-    openLayerEditorPropertyGroup('Colour Shift')
+    d3script.openLayerEditorPropertyGroup('Colour Shift')
 
 def openCrop():
-    openLayerEditorPropertyGroup('Crop')  
+    d3script.openLayerEditorPropertyGroup('Crop')  
 
 
 SCRIPT_OPTIONS = {
