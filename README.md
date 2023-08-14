@@ -24,49 +24,49 @@ For the included scripts, make a folder in the project root called "scripts".  D
 
 
 # What the included scripts do
-There are currently fourteen groups of scripts included in this release:
+Here is an overview of the scripts included in this release:
 
-## EncoderLink.py
+## EncoderLink
 Provides functions that are useful when combined with an external encoder, like the knobs on a Streamdeck plus.  Look at code and the Companion config for more information.
 
 
-## EosLink.py
+## EosLink
 <img src="sampleimages/EosLink.PNG" align="right" width="200px" />
 Ability to interact with an Eos lighting console.  Can create, delete, and retrigger cues in an Eos cuelist.  The create and delete widgets populate with the cue (e.g. tag) and label (e.g. note) for the current section.  Requires an OSC device to be setup for Eos.  The first time you run an EosLink script you should choose the OSC device from the dropdown list, and choose the user and cuelist defaults to use.
 
 <br clear="right" />
 
 
-## FieldShortcuts.py
+## FieldShortcuts
 <img src="sampleimages/fieldshortcuts.PNG" align="right" width="400px" />
 Creates keyboard shortcuts for the most common layer editor properties.  For example, if you have a layer editor open, pressing Ctrl-Shift-t will put keyboard focus on the Brightness field if the property is not animated, or open the keyframe editor for the field if it is animated.  It will also minimize all other field groups.  It's basically an attempt to recreate After Effects style shortcut keys for layer properties.
 
 <br clear="right" />
 
 
-## LayerColorManager.py
+## LayerColorManager
 <img src="sampleimages/LayerColorManager.PNG"/>
 Allows you to control the UI colors of layers on the timeline.  You can set different criteria based on layer name, status, module type, and module category.  Layers are matched based on the order of the criteria, starting at the top option, until a match is found.  THIS IS HIGHLY INVASIVE AND EXPERIMENTAL. I HAVE NOT THOROUGHLY TESTED THIS YET.
 
 <br clear="right" />
 
 
-## LayerEditorImprovements.py
+## LayerEditorImprovements
 <img src="sampleimages/LayerEditorImprovements.PNG" align="right" width="300px" />
 Pins the max height of any open layer editor to the distance between the state bar and the top of the timeline track.  Also, pins the layer editor to the left edge of the screen.  Opening multiple layer editors will tile them out side by side from left to right. THIS IS HIGHLY INVASIVE AND EXPERIMENTAL. I HAVE NOT THOROUGHLY TESTED THIS YET.
 
 <br clear="right" />
 
-## Parenting.py
+## Parenting
 <img src="sampleimages/Parenting.PNG" align="right" width="400px" />
 The Parent Layers script lets you automatically create expressions linking from multiple layers(children) to one primary layer(parent).  With multiple layers selected, run the script, and at the top choose a layer to be a parent.  You can then either check specific fields they have in common, or use the buttons to select groups of common layers.  The parent layer will have "EXPSRC" appended to its name since expressioning is currently based on names and will break if the parent is renamed.
 
 <br clear="right" />
 
 
-## PresetManager.py
+## PresetManager
 <img src="sampleimages/PresetManager.PNG" align="right" width="600px" />
-The Preset Manager allows for the saving and recall of any numerical or index based property (e.g. no resources).  You can either use the buttons to save common sets of properties, or instead save the all the open sequences of the current layer editor.  You can also choose whether to save timing information or not.  Presets with timing information will use that timing info to animate properties, and will turn on sequencing on a property if applied to it.  You can right click on a preset to edit, rename, or delete it.  There are also special wildcards(see code) to allow you use the "current", "previous", or "next" value as a keyframe.  There is also a convenience script to allow you to apply presets by name (by connecting it do a streamdeck button, for example).
+The Preset Manager allows for the saving and recall of any numerical or index based property (e.g. no resources).  You can either use the buttons to save common sets of properties, or instead save the all the open sequences of the current layer editor.  You can also choose whether to save timing information or not.  Presets with timing information will use that timing info to animate properties, and will turn on sequencing on a property if applied to it.  You can right click on a preset to edit, rename, or delete it.  There are wildcards that can be manually editted into the preset definitions that allow you to reference the current/next section start times, as well as the value of the sequence at the previous/last keyframe, current/next section, and the playhead (see code for more information).  There is also a convenience script to allow you to apply presets by name (by connecting it do a streamdeck button, for example).
 
 <br clear="right" />
 
@@ -77,11 +77,6 @@ The Screen Config Helper aids in and speeds up the creation of Animate Object pr
 
 <br clear="right" />
 
-## SmartRename.py
-<img src="sampleimages/SmartRename.PNG" width = "400px" />
-Smart Rename will let you rename a file based on the filename of the media, and automatically appends the module, blendmode, and mapping ("Alpha" as a blendmode and "Video" as a module are not added because I assume them as a default).  This script assumes anything from the first occurance of "\[" onward is automatically updated data and will overwrite that in a name.  This script also will not touch layers with "EXPSRC" in the name as it assumes that layer is the source of an expression link and will be broken by renaming it.
-
-<br />
 
 ## StatusWidget.py
 <img src="sampleimages/StatusWidget.PNG" />
@@ -98,15 +93,10 @@ Partially overrides the drawing of the track/timeline in order to add markers on
 
 <br clear="right" />
 
-## TrackSearch.py
-<img src="sampleimages/TrackSearch.PNG" width="450px"/>
-Allows the user to search the track for videos, mappings, and layers that contain the given text.  You can filter the search by using one of the indicated prefixes.  Search results let you click on a found occurance and the timeline will jump to that occurance.  
-
-<br />
 
 ## TrackTools.py
 <img src="sampleimages/TrackTools.PNG" align="right" width="200px" />
-Track tools provide scripts to Duplicate, Split, Trim, and Move selected layers relative to the position of the playhead.  It also provides the ability to note/tag a section with the playhead at any point in that section, as well as the ability to tell you Section Timing Info.  It also provides the ability to import a Layer from the Layer Library by name. Combining this with the d3script.callScript() function lets you, say, create a key on a Streamdeck which will import a specific layer or group of layers onto the timeline.  I use this often when I see patterns of layers being used - such as file sets that always get played together ("There's a channel 1 and 2 to play...", or sometimes I'll have a hotkey that adds a layer with a "blob" that I can use to mask/shape content.  This file also provides a function to de-sequence all fields on selected layers, useful if you are upgrading an older show file where you have fields with 1 or 0 keyframes that you want desequenced.  Additionally, there is a "Smart Merge Section" option that lets you merge the current section and deletes the cue tag and note at the head of the section being merged.
+Track tools provide scripts to Duplicate, Split, Trim, and Move selected layers relative to the position of the playhead.  It also provides the ability to note/tag a section with the playhead at any point in that section, as well as the ability to tell you Section Timing Info.  It also provides the ability to import a Layer from the Layer Library by name. Combining this with the d3script.callScript() function lets you, say, create a key on a Streamdeck which will import a specific layer or group of layers onto the timeline.  I use this often when I see patterns of layers being used - such as file sets that always get played together ("There's a channel 1 and 2 to play...", or sometimes I'll have a hotkey that adds a layer with a "blob" that I can use to mask/shape content.  This file also provides a function to de-sequence all fields on selected layers, useful if you are upgrading an older show file where you have fields with 1 or 0 keyframes that you want desequenced.  Additionally, there is a "Smart Merge Section" option that lets you merge the current section and deletes the cue tag and note at the head of the section being merged.  Other scripts in this group include "Find Broken Expressions", "Search Track" (find media/mappings/layers by name), "Show Section Timing Info" (what each layer is doing in a section), and "Show Layer Timing Info" (what a selected layer is doing through a track) - clicking on a result from one of these scripts will open the layer in question at the time referenced.  Also included is a renaming script that is smart about abbreviations and adding mappings to the name.  
 
 <br clear="right" />
 
