@@ -6,6 +6,7 @@
 
 import importlib
 from d3 import *
+from gui.columnlistview import ColumnListView, ColumnListViewItem, ColumnListViewColumn
 import os
 import json
 import sys
@@ -16,6 +17,8 @@ import socket
 import win32com.client
 import win32api
 import win32con
+from gui.track.layerview import LayerSelection
+
 
 VK_CODE = {'backspace':0x08, 'tab':0x09, 'clear':0x0C, 'enter':0x0D, 'shift':0x10,'ctrl':0x11,'alt':0x12,'pause':0x13,
             'caps_lock':0x14,'esc':0x1B,'spacebar':0x20,'page_up':0x21,'page_down':0x22,'end':0x23,'home':0x24,'left_arrow':0x25,
@@ -122,12 +125,17 @@ def findWidgetByName(name):
 
     return d3gui.root.findWidgetByName(name)
 
-def getPersistentValue(key):
+def getPersistentValue(key,domain=None):
     """
     Gets a persistent value.  d3script stores values as JSON in a special note in d3's note system.
     """
     
-    note = resourceManager.loadOrCreate('objects/note/'+NOTESTORAGENAME+'.apx',Note)
+    domainPath = ""
+
+    if domain != None:
+        domainPath = "_" + domain
+
+    note = resourceManager.loadOrCreate('objects/note/'+NOTESTORAGENAME+domainPath+'.apx',Note)
     if len(note.text) > 0:
         localDict = json.loads(note.text)
     else:
@@ -139,11 +147,17 @@ def getPersistentValue(key):
         return None
 
 
-def setPersistentValue(key,value):
+def setPersistentValue(key,value,domain=None):
     """
     Sets a persistent value which will exist across restarts.  d3script stores values as JSON in a special note in d3's note system.
     """
-    note = resourceManager.loadOrCreate('objects/note/'+NOTESTORAGENAME+'.apx',Note)
+
+    domainPath = ""
+
+    if domain != None:
+        domainPath = "_" + domain
+
+    note = resourceManager.loadOrCreate('objects/note/'+NOTESTORAGENAME+domainPath+'.apx',Note)
     if len(note.text) > 0:
         localDict = json.loads(note.text)
     else:
@@ -151,7 +165,7 @@ def setPersistentValue(key,value):
     
     localDict[key] = value
 
-    note.text = json.dumps(localDict)
+    note.text = json.dumps(localDict,indent=4)
 
 
 def createLayerOfTypeOnCurrentTrack(moduleType):
@@ -331,6 +345,45 @@ def simulateKeypress(key):
 
     shell.SendKeys(key)
 
+def allLayersOfObject(layerSource):
+    """
+    Returns all nested layers of an object (usually track).
+    """
+        
+    foundLayers = []
+    
+    for lay in layerSource:
+        foundLayers.append(lay)
+        if isinstance(lay, GroupLayer):
+            foundLayers.extend(allLayersOfObject(lay.layers))
+
+    return foundLayers
+
+
+def getSectionTagNoteForTrackAndTime(track,time):
+    """
+    Return the cue tag and the note for a particular time
+    """
+    beat = track.timeToBeat(time)
+    sectIndex = track.beatToSection(beat)
+    sectStart = track.sections.getT(sectIndex)
+
+    tagIndex = track.tags.find(sectStart,sectStart)
+    if (tagIndex == -1) or (track.tags.getT(tagIndex) != sectStart):
+        newTag = ""
+    else:
+        newTag = track.tags.getV(tagIndex).split()[1]
+
+        
+    noteIndex = track.notes.find(sectStart, sectStart)
+    if (noteIndex == -1) or (track.notes.getT(noteIndex) != sectStart):
+        newNote = ""
+    else:
+        newNote = track.notes.getV(noteIndex)
+
+    return sectStart, newTag, newNote
+
+
 def simulateKeydown(key):
     """
     Simulates a keydown event without a keyup event (for pressing SHIFT, CTRL, etc)
@@ -359,6 +412,83 @@ def getSelectedLayers():
         return  tw.layerView.getSelectedLayers()
 
 
+def showTimeBasedResultsWidget(title, columnNames, results):
+    """
+    Opens a table of results which are clickable to jump to a specific result
+    result[-2] must be a track, and result[-1] a time in that track
+    """
+    def handleItemClick(item,colIndex,resultsWidget):
+        print('track: '+str(item.values[-2]))
+        print('time: '+str(item.values[-1]))
+        time = item.values[-1]
+        track = item.values[-2]
+        fieldName = item.values[-3]
+        lay = item.values[-4]
+
+        if (time != None):
+            cmd = TransportCMDTrackBeat()
+            tm = d3.state.currentTransportManager
+            trackTime = track.findBeatOfLastTag(track.timeToBeat(time))
+            cmd.init(resultsWidget, tm, track, track.timeToBeat(time), track.transitionInfoAtBeat(trackTime))
+            tm.addCommand(cmd)
+
+        if (lay != None):
+            oem = getTrackWidget().layerView.openEditorManager
+            laySelect = LayerSelection([lay])
+            oem.requestLayerEditor(laySelect)
+
+        if (fieldName != None):
+            closeAllLayerSequences()
+            closeAllLayerSeparators()
+
+            m=filter(lambda f:f.fieldSequence.name == fieldName,oem.openLayerEditors[laySelect].fieldWrappers)
+            for f in m:
+                f.field.parent.expand()
+                f.field.valueBox.selectValue()
+                if (f.fieldSequence.noSequence == False):
+                    f.openSequence(True)
+
+
+    columns = []
+    for column in columnNames:
+        columns.append(ColumnListViewColumn(column,column,None))
+
+    resultWidget = Widget()
+    resultWidget.add(TitleButton(title))
+
+    listWidget = ColumnListView(columns,maxSize=Vec2(1500, 800) * d3gui.dpiScale)
+    
+    rows = map(lambda x:ColumnListViewItem(x),results)
+
+    listWidget.items = rows
+    listWidget.recalculateColumnSizes()
+    listWidget.itemColumnClickedAction = (lambda item,colIndex: handleItemClick(item,colIndex,resultWidget))
+
+    resultWidget.add(listWidget)
+    resultWidget.arrangeVertical()
+    resultWidget.computeAllMinSizes()
+    d3gui.root.add(resultWidget)
+    resultWidget.pos = (d3gui.root.size / 2) - (resultWidget.size/2)
+    resultWidget.pos = Vec2(resultWidget.pos[0],resultWidget.pos[1]-100)
+
+
+def standardModuleAbbreviation(modName):
+    """
+    Standard shortenings of Module Name types
+    """
+    if modName == "ColourAdjust":
+        modAbbr = "[CAdj]"
+    elif modName == "ChannelRouter":
+        modAbbr = "[ChRt]"
+    elif modName == "Gradient":
+        modAbbr = "[Grad]"
+    elif modName == "Notch":
+        modAbbr = "[Ntch]"
+    else:
+        modAbbr = modName[0:4]
+
+    return modAbbr
+
 def blendModeToString(mode):
     """
     Converts blendmode to a human readable form
@@ -385,6 +515,53 @@ def blendModeToString(mode):
         18.0 : 'HMix' }
 
     return modes[mode]
+
+def closeAllLayerSeparators():
+    ole = getTrackWidget().layerView.openEditorManager.openLayerEditors
+    for x in ole:  
+        v = ole[x].findDescendantsByType(CollapsableWidget)
+        w = list(v)
+        for i in w:
+            i.collapse()
+
+
+def closeAllLayerSequences():
+    """Close all sequences in open editors"""
+    ole = getTrackWidget().layerView.openEditorManager.openLayerEditors  
+    for x in ole:    
+        for f in ole[x].fieldWrappers:
+            f.closeSequence()
+
+
+def openLayerSequenceForProperty(p):
+    closeAllLayerSequences()
+    closeAllLayerSeparators()
+    ole = getTrackWidget().layerView.openEditorManager.openLayerEditors
+
+    if len(ole) == 0:
+        tw = d3script.getTrackWidget()
+        lv = tw.layerView
+        lv.openEditorManager.requestLayerEditor(LayerSelection(lv.getSelectedLayers()))
+        ole = getTrackWidget().layerView.openEditorManager.openLayerEditors  
+
+    for x in ole: 
+        m=filter(lambda f:f.fieldSequence.name == p,ole[x].fieldWrappers)
+        for f in m:
+            f.field.parent.expand()
+            f.field.valueBox.selectValue()
+            if (f.fieldSequence.noSequence == False):
+                f.openSequence(True)
+
+
+def openLayerEditorPropertyGroup(group):
+    ole = getTrackWidget().layerView.openEditorManager.openLayerEditors
+    closeAllLayerSeparators() 
+    for x in ole:   
+        v = ole[x].findDescendantsByType(CollapsableWidget)
+        w = list(v)
+        for i in w:
+            if i.name == group:
+                i.expand()
 
 
 def guiSpacer(x,y):
