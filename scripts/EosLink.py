@@ -86,11 +86,13 @@ def _buildEosBaseWidget(title, buttonLabel, action, baseWidget, includeLabelFlag
     baseWidget.labelWidget.add(TextLabel('Eos List:').justify())
 
     baseWidget.cueEditBox = ValueBox(baseWidget,'cue')
+    baseWidget.cueEditBox.textBox.returnAction.add(action)
     baseWidget.valuesWidget.add(baseWidget.cueEditBox)
     baseWidget.labelWidget.add(TextLabel('Cue Number:').justify()) 
 
     if (includeLabelFlag):
         baseWidget.labelEditBox = ValueBox(baseWidget,'label')
+        baseWidget.labelEditBox.textBox.returnAction.add(action)
         baseWidget.valuesWidget.add(baseWidget.labelEditBox)
         baseWidget.labelWidget.add(TextLabel('Cue Label:').justify()) 
 
@@ -163,7 +165,7 @@ class EosCueDelete(Widget):
         Widget.__init__(self) 
 
         _buildEosBaseWidget('Delete Cue', 'Delete Cue', self.doCueDeletion, self, False)  
-
+        self.cueEditBox.focus = True
 
     def doCueDeletion(self):
 
@@ -278,7 +280,7 @@ class EosCueCreator(Widget):
         Widget.__init__(self)   
 
         _buildEosBaseWidget('Create Cue', 'Create Cue', self.doCueCreation, self, True) 
-
+        self.cueEditBox.focus = True
 
     def doCueCreation(self):
 

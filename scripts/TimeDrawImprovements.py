@@ -5,7 +5,7 @@ def initCallback():
     d3script.log("TimelineDrawImprovements","TimelineDrawImprovements Loaded")
 
 def _renderToDisplayList(view, layer, isSelected):
-    view.LAYER_RENDER_HEIGHT = 40
+    view.LAYER_RENDER_HEIGHT = 22 * d3gui.dpiScale.x
     displayList = layer.subdl
     displayList.clear()
     whiteMix = colours('layer_whitemix')
@@ -62,6 +62,9 @@ def _renderToDisplayList(view, layer, isSelected):
     for t0, t1 in report_intervals((r.t0, r.t1) for r in layer.resourceReports if r.seriousness == 1):
         render_interval(t0, t1, colours('layer_bad'))
 
+    for t0, t1 in report_intervals((r.t0, r.t1) for r in layer.expressionReports if r.seriousness == 1):
+        render_interval(t0, t1, colours('layer_bad'))
+
     expandIconOffset = d3gui.dpiScale.x * 4
     textOffset = d3gui.dpiScale.x * 4
     iconCol = colours('layer_endbuttons')
@@ -76,8 +79,8 @@ def _renderToDisplayList(view, layer, isSelected):
                     keys.append(key)
     
     for key in keys:
-        displayList.quad(view.endMaterial, Rect(Vec2(bw.tToX(key.localT - layer.start) - view.END_BITMZP_SIZE.x/2 -1,(10)), view.END_BITMZP_SIZE*1.3), keyCol, Rect(0, 0, 1, 1))
-        displayList.quad(view.endMaterial, Rect(Vec2(bw.tToX(key.localT - layer.start)  - view.END_BITMZP_SIZE.x/2+2,(10)), view.END_BITMZP_SIZE*1.3), keyCol, Rect(0, 0, -1, 1))
+        displayList.quad(view.endMaterial, Rect(Vec2(bw.tToX(key.localT - layer.start) - view.END_BITMZP_SIZE.x/2 -1,(6 * d3gui.dpiScale.x)), view.END_BITMZP_SIZE*1.3), keyCol, Rect(0, 0, 1, 1))
+        displayList.quad(view.endMaterial, Rect(Vec2(bw.tToX(key.localT - layer.start)  - view.END_BITMZP_SIZE.x/2+2,(6 * d3gui.dpiScale.x)), view.END_BITMZP_SIZE*1.3), keyCol, Rect(0, 0, -1, 1))
 
     if isSelected:
         displayList.quad(view.endMaterial, Rect(Vec2(), view.END_BITMZP_SIZE), iconCol, Rect(0, 0, 1, 1))
@@ -89,7 +92,7 @@ def _renderToDisplayList(view, layer, isSelected):
             material = view.smartGroupMaterial
         else:
             material = view.contractMaterial if layer.isExpanded else view.expandMaterial
-        displayList.quadBounded(material, Rect(Vec2(expandIconOffset, 5), Vec2(view.LAYER_RENDER_HEIGHT - 10, view.LAYER_RENDER_HEIGHT - 10)), iconCol, Rect(0, 0, 1, 1), expandIconOffset)
+        displayList.quadBounded(material, Rect(Vec2(expandIconOffset, 5), Vec2(view.LAYER_RENDER_HEIGHT - 15 * d3gui.dpiScale.x, view.LAYER_RENDER_HEIGHT - 15 * d3gui.dpiScale.x)), iconCol, Rect(0, 0, 1, 1), expandIconOffset)
         textOffset += view.LAYER_RENDER_HEIGHT - 10 + d3gui.dpiScale.x * 4
     name = layer.name + layer.indicator + (' [LOCKED]' if layer.locked else '')
     displayList.printBounded(d3gui.font, name, Vec2(textOffset, 1), max(0, layer.size.x - textOffset), textOffset, 1, colours('layer_name'))
@@ -104,8 +107,15 @@ def _renderToDisplayList(view, layer, isSelected):
 def loadImprovements():
 
     tw = d3script.getTrackWidget()
-    tw.layerView.view.LAYER_RENDER_HEIGHT = 40
+    tw.layerView.view.LAYER_RENDER_HEIGHT = 22 * d3gui.dpiScale.x
+    tw.layerView.view.__class__._oldRenderToDisplayList = tw.layerView.view.__class__._renderToDisplayList
     tw.layerView.view.__class__._renderToDisplayList = _renderToDisplayList
+    tw.layerView.reRenderNeeded = True
+
+def revertImprovements():
+    tw = d3script.getTrackWidget()
+    tw.layerView.view.LAYER_RENDER_HEIGHT = d3gui.font.maxHeightInPixels + 4.0
+    tw.layerView.view.__class__._renderToDisplayList = tw.layerView.view.__class__._oldRenderToDisplayList
     tw.layerView.reRenderNeeded = True
 
 
@@ -114,10 +124,16 @@ SCRIPT_OPTIONS = {
     "init_callback" : initCallback, # Init callback if version check passes
     "scripts" : [
         {
-            "name" : "Timeline Improvements", # Display name of script
+            "name" : "Load Improvements", # Display name of script
             "group" : "Timeline Improvements", # Group to organize scripts menu.  Scripts menu is sorted a separated by group
-            "help_text" : "Set Layer Colors", #text for help system
+            "help_text" : "Adds keyframes on modules in Track", #text for help system
             "callback" : loadImprovements, # function to call for the script
+        },
+                {
+            "name" : "Revert Imrprovements", # Display name of script
+            "group" : "Timeline Improvements", # Group to organize scripts menu.  Scripts menu is sorted a separated by group
+            "help_text" : "Reverts timeline view to normal", #text for help system
+            "callback" : revertImprovements, # function to call for the script
         }
         ]
     }

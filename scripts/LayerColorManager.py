@@ -89,9 +89,11 @@ class ColorSettings():
         'status.muted',
         'status.smartGroup',
         'status.group',
+        'status.containedInGroup',
         'status.suppressed',
         'status.externalControl',
         'status.hasExpression',
+        'status.brokenExpression',
         'none'
     ]
             
@@ -221,13 +223,17 @@ def patchCalcColor(data):
                     return color
                 continue
             if crit == 'status.smartGroup':
-                 if isinstance(layer,SmartGroupLayer):
-                      return color
-                 continue
+                if isinstance(layer,SmartGroupLayer):
+                    return color
+                continue
             if crit == 'status.group':
-                 if isinstance(layer,GroupLayer):
-                      return color
-                 continue
+                if isinstance(layer,GroupLayer):
+                    return color
+                continue
+            if crit == 'status.containedInGroup':
+                if (layer.container != None):
+                    return color
+                continue
             if crit == 'status.externalControl':
                  if layer.isExternallyControlled():
                       return color
@@ -236,6 +242,12 @@ def patchCalcColor(data):
                 if type(layer) != Layer:
                    continue
                 if (len(filter(lambda x: x.expression,layer.fields)) > 0):
+                    return color
+                continue
+            if crit == 'status.brokenExpression':
+                if type(layer) != Layer:
+                   continue
+                if (len(layer.expressionReports) > 0):
                     return color
                 continue
             if crit == 'status.suppressed':

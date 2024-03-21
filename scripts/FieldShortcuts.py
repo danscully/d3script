@@ -3,14 +3,22 @@
 from gui.inputmap import *
 from d3 import *
 import d3script
+from gui.track.layerview import LayerSelection
 
 def initCallback():
     d3script.log("FieldShortcuts","FieldShortcuts Loaded")
 
 
 def openAnimatedSequences():
-    d3script.closeAllLayerSeparators()
+
     ole = d3script.getTrackWidget().layerView.openEditorManager.openLayerEditors 
+
+    if len(ole) == 0:
+        tw = d3script.getTrackWidget()
+        lv = tw.layerView
+        lv.openEditorManager.requestLayerEditor(LayerSelection(lv.getSelectedLayers()))
+
+    d3script.closeAllLayerSeparators()
     for x in ole:    
         m=filter(lambda f:f.fieldSequence.sequence.nKeys() > 1,ole[x].fieldWrappers)
         for f in m:

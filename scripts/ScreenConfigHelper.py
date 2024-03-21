@@ -6,7 +6,7 @@ def initCallback():
     d3script.log("ScreenConfigHelper","ScreenConfigHelper Loaded")
 
 def getSceneryMoverLayer():
-    sceneryLayer = filter(lambda x:x.name == 'SCENERYMOVER',resourceManager.allResources(Layer))
+    sceneryLayer = filter(lambda x:x.name == 'SCENERYMOVER', state.track.layers)
     if (len(sceneryLayer) != 1):
         d3script.log('ScreenConfigHelper','Could not find SCENERYMOVER layer.  Create layer with that name to add Screen Config keys automatically')
         return None
@@ -68,7 +68,10 @@ def createOrUpdateScreenConfig(configName,addToModule=True,moveTime=5):
             configSeq.sequence.setResource(state.player.tRender,curConfig)
             configSeq.sequence.setResource(state.player.tRender + float(moveTime), sc)
 
-
+        nextKeyTime = configSeq.sequence.findNextKeyTime(state.player.tRender + float(moveTime))
+        
+        if nextKeyTime > (state.player.tRender + float(moveTime)):
+            configSeq.sequence.setResource(nextKeyTime,sc)
 
 class ScreenConfigHelperWidget(Widget):
 
@@ -108,7 +111,11 @@ class ScreenConfigHelperWidget(Widget):
             createOrUpdateScreenConfig(resName,addToModule = True,moveTime = self.transitionTime)
         self.close()
 
-        
+
+def updateCurrentScreenConfig():
+    config = getConfigForTime(state.player.tRender)
+    resName = config.userInfoPath
+    createOrUpdateScreenConfig(resName,addToModule = False)
 
 def openScreenConfigHelperWidget():
     d3gui.root.add(ScreenConfigHelperWidget())
@@ -123,6 +130,12 @@ SCRIPT_OPTIONS = {
             "help_text" : "Create a Screen Config by name", #text for help system
             "callback" : createOrUpdateScreenConfig, # function to call for the script
         },
+        {
+            "name" : "Update Config", # Display name of script
+            "group" : "Screen Config Helper", # Group to organize scripts menu.  Scripts menu is sorted a separated by group
+            "help_text" : "Update current screen config", #text for help system
+            "callback" : updateCurrentScreenConfig, # function to call for the script
+        },        
         {
             "name" : "Open SC Helper Widget", # Display name of script
             "group" : "Screen Config Helper", # Group to organize scripts menu.  Scripts menu is sorted a separated by group

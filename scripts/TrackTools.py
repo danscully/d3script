@@ -124,7 +124,7 @@ def findBrokenExpressionsInCurrentTrack():
         if hasattr(lay,'fields'):
             for f in lay.fields:
                 if (f.expression != None) and (not f.expression.isOK):
-                    foundErrors.append((lay.tracks[0].description, str(lay.tStart), lay.name, f.name, f.expression.expression, lay, f.name, lay.tracks[0], lay.tStart))
+                    foundErrors.append((state.track.description, str(lay.tStart), lay.name, f.name, f.expression.expression, lay, f.name, state.track, lay.tStart))
 
     print(foundErrors)
     d3script.showTimeBasedResultsWidget('Broken Expressions',['Track','Time','Layer','Field', 'ExpText'], foundErrors)
@@ -137,7 +137,7 @@ def addEffectLayersToSelectedLayers(moduleName):
 
     for lay in lays:
         newLayer = d3script.createLayerOfTypeOnCurrentTrack(moduleName)
-        trk = newLayer.tracks[0]
+        trk = state.track
         if newLayer == None:
             d3script.log('TrackTools','Could not create effect layer of type: ' + moduleName)
             continue
@@ -225,13 +225,13 @@ def showLayerTimingInfo(trustNoSequence = True):
             if (fld.name == 'video') and (keyCount >= keysNeeded):
 
                 for k in activeKeys:
-                    sectStart, tag, note = d3script.getSectionTagNoteForTrackAndTime(lay.tracks[0], k.localT)
+                    sectStart, tag, note = d3script.getSectionTagNoteForTrackAndTime(state.track, k.localT)
                     mediaTransField= d3script.getFieldFromLayerByName(lay,'transition time')
                     t = mediaTransField.sequence.findCurrentKeyTime(k.localT)
                     transKey = filter(lambda k: k.localT == t,mediaTransField.sequence.keys)[0]
                     cueDescription = tag + ' (' + note + ')' 
                     animDescription = str(round((k.localT - sectStart), 2)) + '@' + k.r.description + '(' + str(transKey.v) + ')'
-                    timedEvents.append((lay.name, fld.name, cueDescription, animDescription, lay, fld.name, lay.tracks[0], k.localT))
+                    timedEvents.append((lay.name, fld.name, cueDescription, animDescription, lay, fld.name, state.track, k.localT))
 
             elif (fld.name != 'transition time') and (keyCount >= keysNeeded):
 
@@ -252,10 +252,10 @@ def showLayerTimingInfo(trustNoSequence = True):
                     elif (k.interpolation == k.select):
                         interpolationFlag = '[S]'
 
-                    sectStart, tag, note = d3script.getSectionTagNoteForTrackAndTime(lay.tracks[0], k.localT)
+                    sectStart, tag, note = d3script.getSectionTagNoteForTrackAndTime(state.track, k.localT)
                     cueDescription = tag + ' (' + note + ')' 
                     animDescription = str(round((k.localT - sectStart), 2)) + interpolationFlag + '@' + val
-                    timedEvents.append((lay.name,fld.name,cueDescription,animDescription, lay, fld.name, lay.tracks[0], k.localT))
+                    timedEvents.append((lay.name,fld.name,cueDescription,animDescription, lay, fld.name,state.track, k.localT))
 
     #Show results
     columnNames = ['Layer','field','cue','key']
@@ -311,7 +311,7 @@ def showSectionTimingInfo(trustNoSequence = True):
                     transKey = filter(lambda k: k.localT == t,mediaTransField.sequence.keys)[0]
                     animDescription += '+' + str(round((k.localT - scStart), 2)) + '@' + k.r.description + '(' + str(transKey.v) + ') '
 
-                timedEvents.append((lay.name, fld.name, animDescription, lay, fld.name, lay.tracks[0], None))
+                timedEvents.append((lay.name, fld.name, animDescription, lay, fld.name, state.track, None))
 
             elif (fld.name != 'transition time') and (keyCount >= keysNeeded):
 
@@ -336,7 +336,7 @@ def showSectionTimingInfo(trustNoSequence = True):
 
                     animDescription += '+' + str(round((k.localT - scStart), 2)) + interpolationFlag + '@' + val + ' '
 
-                timedEvents.append((lay.name, fld.name, animDescription, lay, fld.name, lay.tracks[0], None))
+                timedEvents.append((lay.name, fld.name, animDescription, lay, fld.name, state.track, None))
 
     #Show results
     columnNames = ['Layer','field','keys']
@@ -368,6 +368,9 @@ def importLayerFromLibraryByName(layerName):
             popup = wd
 
     if (wd):
+        #clear the search history 
+        wd.children[2].children[0].valueBox.setVal("")
+
         widgets = wd.children[3].children[0].children
         for wd in widgets:
             if wd.name == layerName:
@@ -409,13 +412,16 @@ class UpdateSectionTagAndNote(Widget):
         gw.arrangeHorizontal()
         gw.add(TextLabel('Cue / TC:'))
         cueVB = ValueBox(self,'newTag')
+        cueVB.textBox.returnAction.add(self.updateTagAndNote)
         gw.add(cueVB)
         self.add(gw)
         
         gw2 = Widget()
         gw2.arrangeHorizontal()
         gw2.add(TextLabel('Note:'))
-        gw2.add(ValueBox(self,'newNote'))
+        noteVB = ValueBox(self,'newNote')
+        noteVB.textBox.returnAction.add(self.updateTagAndNote)
+        gw2.add(noteVB)
         self.add(gw2)
         self.add(Button('OK', self.updateTagAndNote))
 
@@ -489,10 +495,10 @@ def trackSearch(searchString):
     outputRows = []
     for l in lays:
         lay = l[0]
-        if (len(lay.tracks) < 1):
+        if (lay.track == None):
             continue
         
-        trk = lay.tracks[0]
+        trk = lay.track
         trackName = trk.description
         trkTime = trk.findBeatOfLastTag(trk.timeToBeat(lay.tStart)) 
         cueTag = trk.tagAtBeat(trkTime)
@@ -569,7 +575,9 @@ def doComboRename(newNameStem):
             if hasattr(keyResource,'description'):
                 mapNameMatch = re.search('^(\[.+\]).*',i.findSequence('Mapping').sequence.key(0).r.description)
                 if (mapNameMatch != None):
-                    mapName = mapNameMatch.group(1)
+                    mapName = mapNameMatch.group(1) + ' '
+                else:
+                    mapName = i.findSequence('Mapping').sequence.key(0).r.description
             else:
                 mapName = ''
 
@@ -594,7 +602,7 @@ def doComboRename(newNameStem):
             if moduleName == 'VariableVideo':
                 moduleName = ''
             else:
-                moduleName = d3script.standardModuleAbbreviation(moduleName)
+                moduleName = d3script.standardModuleAbbreviation(moduleName) + ' '
 
             newNameStem = newNameStem.replace('$',mediaName)
             newNameStem = newNameStem.replace('@',existingName)
@@ -779,7 +787,7 @@ SCRIPT_OPTIONS = {
         {
             "name" : "Module ReName", # Display name of script
             "group" : "Track Tools", # Group to organize scripts menu.  Scripts menu is sorted a separated by group
-            "binging" : "Keypress,Alt,r",
+            "binding" : "Keypress,Alt,r",
             "bind_globally" : True, # binding should be global
             "help_text" : "Rename module based on properties", #text for help system
             "callback" : renamePopup, # function to call for the script

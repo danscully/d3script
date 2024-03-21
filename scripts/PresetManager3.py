@@ -10,22 +10,28 @@ def initCallback():
     d3script.log("PresetManager3","PresetManager3 Loaded")
     PMPreset.loadPresets()
 
-                
+
+def applyPreset(preset):
+    PMPreset.applyByName(preset)  
+
 class PMPreset():
 
     presets = []
 
     @staticmethod
     def savePresets():
+        d3script.log("PresetManager3","Saving Presets")
         presetList = []
         for p in PMPreset.presets:
             presetList.append({'name':p.name,'fieldValues':p.fieldValues})
         
-        d3script.setPersistentValue('PM3Settings',presetList)
+        d3script.setPersistentValue('PM3Settings',presetList,'PM3Settings')
 
     @staticmethod
     def loadPresets():
-        data = d3script.getPersistentValue('PM3Settings')
+        d3script.log("PresetManager3","Loading Presets")
+        PMPreset.presets = []
+        data = d3script.getPersistentValue('PM3Settings','PM3Settings')
         if data != None:
             d3script.log("PresetManager3","Loading Presets")
             for p in data:
@@ -45,34 +51,19 @@ class PMPreset():
             if (p.name == presetName):
                 p.applyPreset()
 
-    def __init__(self,name, fieldValues):
+    def __init__(self,name, fieldValues):   
+        PMPreset.presets.append(self)
+        self.update(name, fieldValues)
+
+    def update(self, name, fieldValues):
         self.name = name
         self.fieldValues = fieldValues
-        PMPreset.presets.append(self)
         PMPreset.savePresets()
 
-    def __del__(self):
-        presets.remove(self)
-        self.savePresets()
-    
-    @property
-    def fieldValues(self):
-        return self._values
-    
-    @fieldValues.setter
-    def fieldValues(self,fieldValues):
-        self._fieldValues = fieldValues
-        self.savePresets()
-
-    @property
-    def name(self):
-        self._name
-    
-    @name.setter
-    def name(self,name):
-        self._name = name
-        self.savePresets()
-    
+    def delete(self):
+        PMPreset.presets.remove(self)
+        PMPreset.savePresets()
+        
     def applyPreset(self):
         op = Undoable('PresetManager Applying Preset')
         shift = os.keyboard.down(Keyboard.SHIFT)
@@ -114,7 +105,6 @@ class PMPreset():
                 nextSectValue = float(seq.evalString(nextSectStartTime))
 
                 def parseKeyValue(value):
-                    print(type(value))
                     if (isinstance(value,str) or isinstance(value,unicode)):
                         value = value.replace('<currentvalue>',str(curValue))
                         value = value.replace('<previousvalue>',str(prevKeyValue))
@@ -126,7 +116,6 @@ class PMPreset():
                     return float(value)
 
                 def parseKeyTime(time):
-                    print(type(time))
                     if (isinstance(time,str) or isinstance(time,unicode)):
                         if time == '<none>':
                             return None
@@ -134,7 +123,8 @@ class PMPreset():
                         time = time.replace('<nextsectionstart>',str(nextSectStartTime))
                         time = time.replace('<prevkeytime>', str(prevKeyTime))
                         time = time.replace('<nextkeytime>', str(nextKeyTime))
-                        time = time.replace('<epsilon', str(Key.tEpsilon))
+                        time = time.replace('<relativepsilon>', str(tCurRender - Key.tEpsilon))
+                        time = time.replace('<epsilon', str(tCurRender - Key.tEpsilon))
                         return float(eval(time))
                     
                     return float(time) + curTRender
@@ -169,7 +159,6 @@ class PMPreset():
                     elif (fs.noSequence == True) and (keyTime == None):
                         if (seq.nKeys > 0):         
                             seq.remove(0,seq.nKeys())
-                        print('setting it: ' + str(fs.layer.tStart) + ":" + str(keyValue))
                         seq.setFloat(fs.layer.tStart, float(keyValue))
 
                     elif (fs.noSequence == False) and (keyTime == None):
@@ -185,21 +174,22 @@ class PresetEditor(Widget):
 
     def __init__(self ,preset):
         def onSave():
-            self.preset.fieldValues = json.loads(self.editValues)
-            self.preset.name = self.editName
+            d3script.log("PresetManager3",self.editValues)
+            self.preset.update(self.editName, json.loads(self.editValues))
             rw = d3gui.root.findWidgetByName('Record Preset')
             if (rw != None):
                 rw.parent.generatePresetRows(); 
             self.close()
 
         def onDelete():
-            del self.preset
+            self.preset.delete()
             rw = d3gui.root.findWidgetByName('Record Preset')
             if (rw != None):
                 rw.parent.generatePresetRows(); 
             self.close()
 
         self.add(TitleButton('Edit Preset'))
+        d3script.log("PresetManager3","Preset is: " + str(type(preset).__name__))
         self.preset = preset
         self.editName = preset.name
         self.editValues = json.dumps(preset.fieldValues, indent = 2)
@@ -222,7 +212,7 @@ class PresetRecordWidget(Widget):
 
     def __init__(self):
         Widget.__init__(self)
-
+        PMPreset.loadPresets()
         self.add(TitleButton('Record Preset'))
         self.presetName = 'Preset Name'
         self.add(Field('Preset Name',ValueBox(self,'presetName')))
@@ -269,6 +259,8 @@ class PresetRecordWidget(Widget):
 
 
     def generatePresetRows(self):
+
+
         if (self.listWidget):
             rows = []
             for preset in PMPreset.presets:
@@ -421,7 +413,7 @@ SCRIPT_OPTIONS = {
             "name" : "Apply Preset", # Display name of script
             "group" : "Preset Manager", # Group to organize scripts menu.  Scripts menu is sorted a separated by group
             "help_text" : "Apply a preset by name", #text for help system
-            "callback" : PMPreset.applyByName, # function to call for the script
+            "callback" : applyPreset, # function to call for the script
         }
         ]
 

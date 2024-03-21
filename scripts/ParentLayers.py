@@ -98,11 +98,7 @@ class LayerParentPopup(Widget):
         #first rename the parent layer so it has a label
         parent = self.layers[self.parentLayer]
         if parent.name.find('EXPSRC') == -1:
-            splitNames = parent.name.split('[')
-            if len(splitNames) > 1:
-                parent.name = splitNames[0] + ' EXPSRC'
-            else:
-                parent.name = parent.name + ' EXPSRC'
+            parent.name = parent.name + ' EXPSRC'
 
 
         #then slice the selected layers so we don't have the parent layer
