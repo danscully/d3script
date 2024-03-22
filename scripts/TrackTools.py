@@ -604,10 +604,10 @@ def doComboRename(newNameStem):
             else:
                 moduleName = d3script.standardModuleAbbreviation(moduleName) + ' '
 
-            newNameStem = newNameStem.replace('$',mediaName)
-            newNameStem = newNameStem.replace('@',existingName)
+            localNameStem = localNameStem.replace('$',mediaName)
+            localNameStem = localNameStem.replace('@',existingName)
 
-            i.name = moduleName + mapName + newNameStem
+            i.name = moduleName + mapName + localNameStem
 
 
 def renamePopup():
