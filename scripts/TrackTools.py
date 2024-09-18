@@ -27,6 +27,8 @@ def deSequenceLayers():
             fs.stripToFirstKey()
             fld.disableSequencing = True
 
+        d3script.refreshEditorsForLayer(lay)
+
 
 def switchToTrack(track):
     lds = state.localOrDirectorState()
@@ -266,7 +268,8 @@ def showSectionTimingInfo(trustNoSequence = True):
 
     #get the section times
     sects = state.track.sections
-    scIndex = sects.find(state.player.tCurrent, state.player.tCurrent)
+    scIndex = d3script.getSectionIndexForTrackAndTime(state.track, state.player.tCurrent)
+
     #We subtract Key.tEpsilon for snap cues
     scStart = sects.getT(scIndex) - Key.tEpsilon
     scEnd = sects.getT(scIndex + 1)
@@ -495,10 +498,10 @@ def trackSearch(searchString):
     outputRows = []
     for l in lays:
         lay = l[0]
-        if (lay.track == None):
+        if (len(lay.tracks) == 0):
             continue
         
-        trk = lay.track
+        trk = d3script.getTrackForLayer(lay)
         trackName = trk.description
         trkTime = trk.findBeatOfLastTag(trk.timeToBeat(lay.tStart)) 
         cueTag = trk.tagAtBeat(trkTime)
@@ -570,14 +573,17 @@ def doComboRename(newNameStem):
             continue
 
         else:
+            keyResource = None
             
-            keyResource =  i.findSequence('Mapping').sequence.key(0).r
-            if hasattr(keyResource,'description'):
+            if (i.findSequence('Mapping') != None):
+                keyResource =  i.findSequence('Mapping').sequence.key(0).r
+
+            if (keyResource != None) and (hasattr(keyResource,'description')):
                 mapNameMatch = re.search('^(\[.+\]).*',i.findSequence('Mapping').sequence.key(0).r.description)
                 if (mapNameMatch != None):
                     mapName = mapNameMatch.group(1) + ' '
                 else:
-                    mapName = i.findSequence('Mapping').sequence.key(0).r.description
+                    mapName = i.findSequence('Mapping').sequence.key(0).r.description + ' '
             else:
                 mapName = ''
 
@@ -591,7 +597,7 @@ def doComboRename(newNameStem):
                 else:
                     mediaName = ''
 
-            existingNameMatch = re.search('(\[.+\])*(.+)', i.name)
+            existingNameMatch = re.search('(\[.+\])*[\s]*(.+)', i.name)
             if ((existingNameMatch != None) and (existingNameMatch.group(2) != None)):
                 existingName = existingNameMatch.group(2)
             else:
@@ -604,8 +610,7 @@ def doComboRename(newNameStem):
             else:
                 moduleName = d3script.standardModuleAbbreviation(moduleName) + ' '
 
-            localNameStem = localNameStem.replace('$',mediaName)
-            localNameStem = localNameStem.replace('@',existingName)
+            localNameStem = newNameStem.replace('$',mediaName).replace('@',existingName)
 
             i.name = moduleName + mapName + localNameStem
 

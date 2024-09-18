@@ -66,27 +66,33 @@ class PMPreset():
         
     def applyPreset(self):
         op = Undoable('PresetManager Applying Preset')
-        shift = os.keyboard.down(Keyboard.SHIFT)
-        ctrl = os.keyboard.down(Keyboard.CTRL)
-        lays = d3script.getSelectedLayers()
         
-
         curTRender = state.player.tRender
         trk = state.track
         
-
-        
         for valueSet in self.fieldValues:
             modifyFields = []
+            if 'type' in valueSet:
+                typeString = valueSet['type']
+                if typeString == 'int':
+                    setType = int
+                elif typeString == 'str':
+                    setType = str
+                elif typeString == 'float':
+                    setType = float
+                else:    
+                    setType = globals()[typeString.encode('ascii','ignore')]
+            else:
+                setType = float
 
             if valueSet['field'] == '<opensequence>':
                 oles = d3script.getTrackWidget().layerView.openEditorManager.openLayerEditors
                 for ole in oles.values():  
-                    modifyFields += [fw.fieldSequence for fw in ole.selectedFieldWrappers if (fw.fieldSequence.type == float)]
+                    modifyFields += [fw.fieldSequence for fw in ole.selectedFieldWrappers if (fw.fieldSequence.type == setType)]
 
             else:
                 for lay in d3script.getSelectedLayers():
-                    modifyFields += [f for f in lay.fields if (f.name == valueSet['field']) and (f.type == float)]
+                    modifyFields += [f for f in lay.fields if (f.name == valueSet['field']) and (f.type == setType)]
 
             for fs in modifyFields:
                 seq = fs.sequence
@@ -96,24 +102,45 @@ class PMPreset():
                     nextSectStartTime = trk.sections.getT(nextSectIndex)
                 else:
                     nextSectStartTime = sectStartTime + 30; 
-                curValue = float(seq.evalString(curTRender))
+                curValue = seq.evalString(curTRender)
                 prevKeyTime = seq.findCurrentKeyTime(curTRender)
                 nextKeyTime = seq.findNextKeyTime(curTRender)
-                prevKeyValue = float(seq.evalString(prevKeyTime)) 
-                nextKeyValue = float(seq.evalString(nextKeyTime)) 
-                sectValue = float(seq.evalString(sectStartTime))
-                nextSectValue = float(seq.evalString(nextSectStartTime))
+                prevKeyValue = seq.evalString(prevKeyTime)
+                nextKeyValue = seq.evalString(nextKeyTime)
+                sectValue = seq.evalString(sectStartTime)
+                nextSectValue = seq.evalString(nextSectStartTime)
 
                 def parseKeyValue(value):
                     if (isinstance(value,str) or isinstance(value,unicode)):
-                        value = value.replace('<currentvalue>',str(curValue))
-                        value = value.replace('<previousvalue>',str(prevKeyValue))
-                        value = value.replace('<nextvalue>',str(nextKeyValue))
-                        value = value.replace('<sectvalue>',str(sectValue))
-                        value = value.replace('<nextsectvalue>',str(nextSectValue))
-                        value = eval(value)
+                        value = value.replace('<currentvalue>', curValue)
+                        value = value.replace('<previousvalue>', prevKeyValue)
+                        value = value.replace('<nextvalue>', nextKeyValue)
+                        value = value.replace('<sectvalue>', sectValue)
+                        value = value.replace('<nextsectvalue>', nextSectValue)
 
-                    return float(value)
+                        if setType == float:
+                            value = eval(value)
+                            return float(value)
+                        
+                        elif setType == int:
+                            value = eval(value)
+                            return int(value)
+
+                        elif setType == str:
+                            return value
+
+                        else:
+                        # set type must be a resource
+                            res = resourceManager.allResources(setType)
+                            res = filter(lambda r:r.description == value,res)
+                            if len(res) != 1:
+                                return None
+                            else:
+                                return res[0]
+
+                    else:
+                        return value
+                    
 
                 def parseKeyTime(time):
                     if (isinstance(time,str) or isinstance(time,unicode)):
@@ -123,8 +150,8 @@ class PMPreset():
                         time = time.replace('<nextsectionstart>',str(nextSectStartTime))
                         time = time.replace('<prevkeytime>', str(prevKeyTime))
                         time = time.replace('<nextkeytime>', str(nextKeyTime))
-                        time = time.replace('<relativepsilon>', str(tCurRender - Key.tEpsilon))
-                        time = time.replace('<epsilon', str(tCurRender - Key.tEpsilon))
+                        time = time.replace('<relativeepsilon>', str(curTRender - Key.tEpsilon))
+                        time = time.replace('<epsilon>', str(Key.tEpsilon))
                         return float(eval(time))
                     
                     return float(time) + curTRender
@@ -149,26 +176,46 @@ class PMPreset():
                     keyValue = parseKeyValue(key[0])
                     keyTime = parseKeyTime(key[1])
 
+                    def setKey(localSeq,localTime,localValue):
+                        if localValue == None:
+                            return
+                        
+                        if setType == int:
+                            localSeq.setFloat(localTime,float(math.floor(localValue)))
+                        elif setType == float:
+                            localSeq.setFloat(localTime,float(localValue))
+                        elif setType == str:
+                            localSeq.setString(localTime,str(localValue))
+                        else:
+                            localSeq.setResource(localTime,localValue)
+
                     if (fs.noSequence == True) and (keyTime != None):
                         fs.disableSequencing = False   
                         if (seq.nKeys() > 0):         
                             seq.remove(0,seq.nKeys())
-                        seq.setFloat(keyTime, float(keyValue))
+                        setKey(seq, keyTime, keyValue)
                         seq.key(seq.find(keyTime)).interpolation = key[2]
 
                     elif (fs.noSequence == True) and (keyTime == None):
+                        keyTime = fs.layer.tStart
                         if (seq.nKeys > 0):         
                             seq.remove(0,seq.nKeys())
-                        seq.setFloat(fs.layer.tStart, float(keyValue))
+                        setKey(seq, keyTime, keyValue)
 
-                    elif (fs.noSequence == False) and (keyTime == None):
-                        seq.setFloat(curTRender, float(keyValue))
+                    elif (fs.noSequence == False) and (keyTime == None) and ('<>' not in valueSet['flags']):
+                        keyTime = curTRender
+                        setKey(seq, keyTime, keyValue)
                         seq.key(seq.find(curTRender)).interpolation = key[2]
-                
+
+                    elif (fs.noSequence == False) and (keyTime == None) and ('<>' in valueSet['flags']):
+                        setKey(seq, prevKeyTime, keyValue)
+                        setKey(seq, nextKeyTime, keyValue)
+
                     elif (fs.noSequence == False) and (keyTime != None):
-                        seq.setFloat(keyTime, float(keyValue))
+                        setKey(seq, keyTime, keyValue)
                         seq.key(seq.find(keyTime)).interpolation = key[2]
 
+                d3script.refreshEditorsForLayer(fs.layer)
 
 class PresetEditor(Widget):
 
@@ -281,49 +328,6 @@ class PresetRecordWidget(Widget):
     def handleItemRightClick(self,item,colIndex):
 
         PresetEditor(PMPreset.findByName(item.values[0]))
-        #def onSave():
-        #    if (self.editName != self.oldEditName) and (len(filter(lambda x:x['name'] == self.editName, PMPreset.presets)) > 0):
-        #        d3.alertInfo('Preset names should be unique.')
-        #        return
-
-        #    presetValues = json.loads(self.editValues)
-        #    presetName = self.editName
-        #    
-        #    self.presets = filter(lambda x:x['name'] != self.oldEditName,self.presets)
-        #    
-        #    self.presets.append({'name':presetName,'flags':self.editFlags, 'values': presetValues})
-        #    d3script.setPersistentValue('PresetManager2Settings',self.presets)
-        #    self.generatePresetRows()
-        #    self.popup.close()
-
-
-        #def onDelete():
-        #    self.presets = filter(lambda x:x['name'] != self.oldEditName,self.presets)
-        #    d3script.setPersistentValue('PresetManager2Settings',self.presets)
-        #    self.generatePresetRows()
-        #    self.popup.close()
-
-
-        #self.popup = Widget()
-        #self.popup.add(TitleButton('Edit Preset'))
-        #self.editName = item.values[0]
-        #self.oldEditName = item.values[0]
-        #self.editFlags = item.values[1]
-        #self.editValues = json.dumps(filter(lambda x: x['name'] == self.editName,self.presets)[0]['values'],indent = 2)
-        #self.popup.add(Field('Preset Name',ValueBox(self,'editName')))
-        #self.popup.add(Field('Flags',ValueBox(self,'editFlags')))
-        #vb = ValueBox(self,'editValues')
-        #vb.textBox.multiline = True
-        #vb.width = 80.0
-        #self.popup.add(Field('Preset Values', vb))
-        #self.popup.add(Button('Save', onSave))
-        #self.popup.add(Button('Delete', onDelete))
-        #parent = self.floatingParent
-        #self.popup.pos = Vec2(parent.absPos.x + parent.size.x + 8, gui.cursorPos.y)
-        #self.popup.follows(parent)
-        #self.popup.arrangeVertical()
-        #self.popup.computeAllMinSizes()
-        #d3gui.root.add(self.popup)
 
     def addPreset(self,set):
 
@@ -366,7 +370,26 @@ class PresetRecordWidget(Widget):
             for f in m:
                 #f.field.parent.expand()
                 if self.useTimes == 0:
-                    values.append({'field':f.fieldSequence.name,'flags':'','keys':[(f.field.valueBox.getVal(),'<none>',Key.cubic)]})
+                    saveVal = f.field.valueBox.getVal()
+  
+                    if (f.fieldSequence.type == int):
+                        saveType = "int"
+                        saveInterpolation = Key.select
+                    elif (f.fieldSequence.type == float):
+                        saveType = "float"
+                        saveInterpolation = Key.cubic
+                    elif (f.fieldSequence.type == str):
+                        saveType = "str"
+                        saveInterpolation = Key.select
+                    else:
+                        #type is a resource
+                        saveVal = saveVal.description
+                        saveInterpolation = Key.select
+                        saveType = globals().keys()[globals().values().index(f.fieldSequence.type)]
+
+                    values.append({'field':f.fieldSequence.name,'flags':'','type':saveType, 'keys':[(saveVal,'<none>',saveInterpolation)]})
+
+
                 else:
                     trk = state.track
                     keyArray = []
@@ -381,9 +404,26 @@ class PresetRecordWidget(Widget):
                         endTime = trk.lengthInSec
 
                     for key in filter(lambda x: (x.localT >= startTime - Key.tEpsilon) and (x.localT < endTime), f.fieldSequence.sequence.keys):
-                        keyArray.append((key.v,key.localT - startTime,key.interpolation))
+                        if (f.fieldSequence.type == float) or (f.fieldSequence.type == int):
+                            saveVal = key.v
+                        elif f.fieldSequence.type == str:
+                            saveVal = key.s
+                        else:
+                            #We are a resource sequence and we save those via the stringname
+                            saveVal = key.r.description
 
-                    values.append({'field':f.fieldSequence.name,'flags':'','keys':keyArray})    
+                        keyArray.append((saveVal,key.localT - startTime,key.interpolation))
+
+                    if (f.fieldSequence.type == int):
+                        saveType = "int"
+                    elif (f.fieldSequence.type == float):
+                        saveType = "float"
+                    elif (f.fieldSequence.type == str):
+                        saveType = "str"
+                    else:
+                        #type is a resource
+                        saveType = globals().keys()[globals().values().index(f.fieldSequence.type)]
+                    values.append({'field':f.fieldSequence.name,'flags':'','type':saveType,'keys':keyArray})    
 
         PMPreset(self.presetName,values)
         self.generatePresetRows()

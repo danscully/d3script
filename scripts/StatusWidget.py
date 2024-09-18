@@ -86,6 +86,7 @@ class StatusWidget(Widget):
 
         titleButton = TitleButton("Status:")
         self.add(titleButton)
+        titleButton.toggleSticky()
         
 
         def makeStatusItem(label,val,size = self.defaultSize):
@@ -96,20 +97,10 @@ class StatusWidget(Widget):
             wd.add(val)
             return wd
 
-        #self.currentCue = self.getTagForCurrentTime(state.localOrDirectorState().directorState())
-        #vb = ValueBox(self, 'currentCue', readonly=True)
-        #vb.textBox.fontSize(14)
-        #self.add(makeStatusItem('Director Cue:',vb))
-
         self.localCue = self.getTagForCurrentTime(state.localOrDirectorState().localState())
         vb = ValueBox(self, 'localCue', readonly=True)
         vb.textBox.fontSize(14)
         self.add(makeStatusItem('Local Cue:',vb))
-
-        #self.lastEvent = 'MIDI 753'
-        #vb = ValueBox(self, 'lastEvent', readonly=True)
-        #vb.textBox.fontSize(14)
-        #self.add(makeStatusItem('Last TP Event:',vb))
 
         tcWidget = Widget()
         tcWidget.arrangeHorizontal()
@@ -213,8 +204,7 @@ class StatusWidget(Widget):
 
 def openStatusWidget():
     widget = StatusWidget()
-    widget.pos = (d3gui.root.size / 2) - (widget.size/2)
-    widget.pos = Vec2(widget.pos[0],widget.pos[1]-100)
+    widget.pos = Vec2(982.0,2.0)
 
     d3gui.root.add(widget)
 

@@ -62,8 +62,8 @@ def _renderToDisplayList(view, layer, isSelected):
     for t0, t1 in report_intervals((r.t0, r.t1) for r in layer.resourceReports if r.seriousness == 1):
         render_interval(t0, t1, colours('layer_bad'))
 
-    for t0, t1 in report_intervals((r.t0, r.t1) for r in layer.expressionReports if r.seriousness == 1):
-        render_interval(t0, t1, colours('layer_bad'))
+    #for t0, t1 in report_intervals((r.t0, r.t1) for r in layer.expressionReports if r.seriousness == 1):
+    #    render_interval(t0, t1, colours('layer_bad'))
 
     expandIconOffset = d3gui.dpiScale.x * 4
     textOffset = d3gui.dpiScale.x * 4

@@ -199,9 +199,19 @@ class ColorSettings():
                 'defaultColor' : list(self.defaultColor.toVec()) 
             }
 
-def patchCalcColor(data):
+def patchCalcColor(data = None):
     #first save settings
-    d3script.setPersistentValue('LayerColorManager',data.dataRepresentation())
+    if (data != None):
+        d3script.setPersistentValue('LayerColorManager',data.dataRepresentation())
+
+    else:
+        colorData = d3script.getPersistentValue('LayerColorManager')
+        #if no values use default
+        if (not colorData):
+            return
+        else:
+            data = ColorSettings(colorData)
+
 
     def replacementCalcColor(pm,layer):
         for i in range(1,11):
@@ -377,6 +387,12 @@ SCRIPT_OPTIONS = {
             "group" : "Layer Color Manager", # Group to organize scripts menu.  Scripts menu is sorted a separated by group
             "help_text" : "Set Layer Colors", #text for help system
             "callback" : openManager, # function to call for the script
-        }
+        },
+        {
+            "name" : "Patch Layer Colors", # Display name of script
+            "group" : "Layer Color Manager", # Group to organize scripts menu.  Scripts menu is sorted a separated by group
+            "help_text" : "Override Default Layer Colors", #text for help system
+            "callback" : patchCalcColor, # function to call for the script
+        } 
         ]
     }
