@@ -26,6 +26,9 @@ For the included scripts, make a folder in the project root called "scripts".  D
 # What the included scripts do
 Here is an overview of the scripts included in this release:
 
+## DeFlash
+This script will stop the transport control buttons from flashing, and instead have them highlight in a color.
+
 ## EncoderLink
 Provides functions that are useful when combined with an external encoder, like the knobs on a Streamdeck plus.  Look at code and the Companion config for more information.
 
