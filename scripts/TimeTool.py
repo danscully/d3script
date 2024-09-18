@@ -1,5 +1,5 @@
 import d3script
-import time
+import re
 from d3 import *
 from math import floor
 
@@ -19,9 +19,12 @@ def insertTime(time):
         alertInfo('Time in wrong format.  Should be in seconds or seconds.frames (e.g. "54" or "30.12").  No changes made.')
         return
     else:
+        print('grp 1: ' + str(timeMatch.group(1)))
+        print('grp 2: ' + str(timeMatch.group(2)))
+
         timeAmount = float(timeMatch.group(1))
 
-        if len(timeMatch.groups()) > 1:
+        if timeMatch.group(2) != None:
             timeAmount += float(timeMatch.group(2)) * timeBase
 
     #grab the tRender time as the insertion point 
@@ -37,7 +40,7 @@ def insertTime(time):
     state.localOrDirectorState().directorState().output = LocalState.Hold
 
     #Extend length of track
-    state.track.lengthInBeats = state.track.timeToBeat(timeAmount)
+    state.track.lengthInBeats += state.track.timeToBeat(timeAmount)
 
     #get the barWidget to help us move stuff
     bw = d3script.getTrackWidget().barWidget
@@ -59,56 +62,42 @@ def insertTime(time):
             for fs in lay.fields:
               seq = fs.sequence
               for k in seq.keys:
-                  k.localT += timeAmount
+                    if (k.localT >= timeInsert):
+                        k.localT += timeAmount
 
 
 
-        #Move the annots
-        def moveAnnots(timeSequence):
-            numAnnots = timeSequence.n()
-            for i in range(numAnnots-1, -1):
-                annotTime = timeSequence.getT(i)
-                if annotTime < timeInsert:
-                    #we are iterating backwards, so lets bail 
-                    break
-                else:
-                    annotValue = timeSequence.getV(i)
-                    timeSequence.removeIndex(i)
-                    timeSequence.set(annotTime,annotValue)
+    #Move the annots
+    def moveAnnots(timeSequence):
+        numAnnots = timeSequence.n()
+        for i in range(numAnnots-1, -1, -1):
+            print('Annots: ' + str(numAnnots) + ':' + str(timeSequence) + ':' + str(i))
+            annotTime = timeSequence.getT(i)
+            if annotTime < timeInsert:
+                #we are iterating backwards, so lets bail 
+                break
+            else:
+                annotValue = timeSequence.getV(i)
+                timeSequence.removeIndex(i)
+                timeSequence.set(annotTime+timeAmount,annotValue)
 
-        moveAnnots(state.track.tags)
-        moveAnnots(state.track.notes)
-        moveAnnots(state.track.sections)
+    moveAnnots(state.track.tags)
+    moveAnnots(state.track.notes)
+    moveAnnots(state.track.sections)
 
-        state.localOrDirectorState().directorState().output = outputState
+    state.localOrDirectorState().directorState().output = outputState
 
-
-class TimeAddingWidget(Widget):
-    isStickyable = False
-
-    def __init__(self):
-
-        Widget.__init__(self)
-        self.arrangeVertical()
-
-        titleButton = TitleButton("Insert Time:")
-        self.add(titleButton)
-        self.tsw = TimecodeSubmitWidget()
-        self.add(self.tsw)
-        self.arrangeVertical()
-
-        self.pos = (d3gui.root.size / 2) - (self.size/2)
 
 
 def insertTimePopup():
     time = str(DEFAULT_AMT)
     menu = PopupMenu('Insert Time')
-    menu.editItem('Seconds:', time, insertTime)
+    menu.editItem('Seconds.Frames:', time, insertTime)
     menu.pos = (d3gui.root.size / 2) - (menu.size/2)
     menu.pos = Vec2(menu.pos[0],menu.pos[1]-100)
 
     d3gui.root.add(menu)
-    menu.contents.findWidgetByName('Seconds:').textBox.focus = True
+    menu.contents.findWidgetByName('Seconds.Frames:').textBox.focus = True
 
 def initCallback():
     d3script.log("Time Tool","Time Tool Loaded")
