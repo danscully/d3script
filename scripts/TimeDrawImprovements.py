@@ -214,12 +214,13 @@ def _renderToDisplayListR30(view, layer, isSelected):
 def loadImprovements():
 
     tw = d3script.getTrackWidget()
-    tw.layerView.view.LAYER_RENDER_HEIGHT = 22 * d3gui.dpiScale.x
-    tw.layerView.view.__class__._oldRenderToDisplayList = tw.layerView.view.__class__._renderToDisplayList
-    if (ReleaseVersion.major() < 30):
-        tw.layerView.view.__class__._renderToDisplayList = _renderToDisplayList
+    view = tw.layerView.view
+    view.LAYER_RENDER_HEIGHT = 22 * d3gui.dpiScale.x
+    view.__class__._oldRenderToDisplayList = view.__class__._renderToDisplayList
+    if (hasattr(view,'END_BITMAP_SIZE')):
+        view.__class__._renderToDisplayList = _renderToDisplayListR30
     else:
-        tw.layerView.view.__class__._renderToDisplayList = _renderToDisplayListR30
+        view.__class__._renderToDisplayList = _renderToDisplayList
         
     tw.layerView.reRenderNeeded = True
 
