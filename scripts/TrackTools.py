@@ -498,10 +498,11 @@ def trackSearch(searchString):
     outputRows = []
     for l in lays:
         lay = l[0]
-        if (len(lay.tracks) == 0):
+
+        trk = d3script.getTrackForLayer(lay)
+        if (trk == None):
             continue
         
-        trk = d3script.getTrackForLayer(lay)
         trackName = trk.description
         trkTime = trk.findBeatOfLastTag(trk.timeToBeat(lay.tStart)) 
         cueTag = trk.tagAtBeat(trkTime)
@@ -653,6 +654,63 @@ def renamePopup():
     menu.contents.findWidgetByName('Rename:').textBox.focus = True
 
 
+def doJumpToNearestCue(target):
+    track = state.track
+    tags = track.tags
+    try:
+        targetNumber = float(target)
+    except:
+        alert('The cue is not a valid format.')
+        return
+        
+    if tags.n < 1:
+        alert('There are no cue tags to search through.')
+        return
+    
+    jumpTime = None
+
+    for i in range(0,tags.n()):
+        tagText = tags.getV(i)
+        if (tagText == "CUE " + target):
+            jumpTime = tags.getT(i)
+            break
+
+        elif ("CUE " in tagText):
+            try:
+                cueNumber = float(tagText[4:])
+            except:
+                continue
+            if (cueNumber < targetNumber):
+                jumpTime = tags.getT(i)
+            else:
+                break
+    
+    if (jumpTime == None):
+        d3.alertInfo('Did not find a good cue match.')
+        
+    cmd = TransportCMDTrackBeat()
+    tm = d3.state.currentTransportManager
+    trackTime = track.findBeatOfLastTag(track.timeToBeat(jumpTime))
+    cmd.init(d3gui.root, tm, track, track.timeToBeat(jumpTime), track.transitionInfoAtBeat(trackTime))
+    tm.addCommand(cmd)
+
+
+    
+
+def nearestCuePopup():
+    """Open a popup menu with ability to jump to the nearest cue"""
+
+    currentValue = "0"
+    menu = PopupMenu('Goto Nearest Cue')
+    menu.editItem('Cue Number:', currentValue, doJumpToNearestCue)
+    menu.pos = (d3gui.root.size / 2) - (menu.size/2)
+    menu.pos = Vec2(menu.pos[0],menu.pos[1]-100)
+
+    d3gui.root.add(menu)
+    menu.contents.findWidgetByName('Cue Number:').textBox.focus = True
+
+
+
 SCRIPT_OPTIONS = {
     "minimum_version" : 21, # Min. compatible version
     "init_callback" : initCallback, # Init callback if version check passes
@@ -792,10 +850,18 @@ SCRIPT_OPTIONS = {
         {
             "name" : "Module ReName", # Display name of script
             "group" : "Track Tools", # Group to organize scripts menu.  Scripts menu is sorted a separated by group
-            "binding" : "Keypress,Alt,r",
+            "binding" : "KeyPress,Alt,r",
             "bind_globally" : True, # binding should be global
             "help_text" : "Rename module based on properties", #text for help system
             "callback" : renamePopup, # function to call for the script
+        },
+        {
+            "name" : "Goto Nearest Cue", # Display name of script
+            "group" : "Track Tools", # Group to organize scripts menu.  Scripts menu is sorted a separated by group
+            "binding" : "KeyPress,Ctrl + Shift,G",
+            "bind_globally" : True, # binding should be global
+            "help_text" : "Find the nearest cue and go to it", #text for help system
+            "callback" : nearestCuePopup, # function to call for the script
         }
         ]
 
