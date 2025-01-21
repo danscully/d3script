@@ -110,8 +110,8 @@ class LayerParentPopup(Widget):
             for index,item in enumerate(self.checkWidget.children):
                 if item.ticked == True:
                     fieldName = self.labelWidget.children[index].name
-                    expression = 'module:' + parent.name + '.' + fieldName
-                    d3script.setExpression(lay,fieldName,d3script.expressionSafeString(expression))
+                    expression = 'getByUID(' + hex(parent.uid)[:-1] + ').' + fieldName
+                    d3script.setExpression(lay,fieldName,expression)
 
         self.close()
     

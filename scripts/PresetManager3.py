@@ -19,6 +19,14 @@ class PMPreset():
     presets = []
 
     @staticmethod
+    def applyResourceToField(resource, field):
+
+        saveType = globals().keys()[globals().values().index(type(resource))]
+        valueSet = [{'field':field,'flags':'','type':saveType, 'keys':[(resource.description,'<none>',Key.select)]}]
+        preset = PMPreset("temp",valueSet,True)
+        preset.applyPreset()
+
+    @staticmethod
     def savePresets():
         d3script.log("PresetManager3","Saving Presets")
         presetList = []
@@ -47,18 +55,33 @@ class PMPreset():
     
     @staticmethod
     def applyByName(presetName):
-        for p in PMPreset.presets:
-            if (p.name == presetName):
-                p.applyPreset()
+        p = PMPreset.findByName(presetName)
+        
+        if (p):
+            p.applyPreset()
 
-    def __init__(self,name, fieldValues):   
+    @staticmethod
+    def loadFromPath(path):
+        name = path.replace("pmpreset/","")
+        return PMPreset.findByName(name)
+
+    def __init__(self,name, fieldValues,hidden=False):   
         PMPreset.presets.append(self)
-        self.update(name, fieldValues)
+        self.update(name, fieldValues,hidden)
 
-    def update(self, name, fieldValues):
+    @property
+    def path(self):
+        return "pmpreset/" + self.name.lower()
+    
+    @property
+    def description(self):
+        return "pmpreset"
+
+    def update(self, name, fieldValues,hidden=False):
         self.name = name
         self.fieldValues = fieldValues
-        PMPreset.savePresets()
+        if not hidden:
+            PMPreset.savePresets()
 
     def delete(self):
         PMPreset.presets.remove(self)
@@ -92,7 +115,7 @@ class PMPreset():
 
             else:
                 for lay in d3script.getSelectedLayers():
-                    modifyFields += [f for f in lay.fields if (f.name == valueSet['field']) and (f.type == setType)]
+                    modifyFields += [f for f in lay.fields if (f.name == valueSet['field']) and ((f.type == setType) or (issubclass(setType,f.type)))]
 
             for fs in modifyFields:
                 seq = fs.sequence

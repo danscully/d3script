@@ -220,7 +220,6 @@ def patchCalcColor(data = None):
             val = getattr(data,'val'+str(i))
             color = getattr(data,'color'+str(i))
             defaultColor = getattr(data,'defaultColor')
-            #print(layer.name + ':' + crit + ' defcol: ' + str(defaultColor))
             
             if crit == 'none':
                 continue

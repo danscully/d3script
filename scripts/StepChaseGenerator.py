@@ -1,4 +1,4 @@
-# EosLink.py
+# StepChaseGenerator.py
 
 
 from d3 import *
@@ -8,86 +8,99 @@ import d3script
 def initCallback():
     d3script.log('StepChaseGenerator','Initialized')
 
-def setupChaseGenerator():
+def setupChaseGenerator(prefix):
     op = Undoable('Setup Chase Generator')
     
-    settingsLayer = d3script.createLayerOfTypeOnCurrentTrack('Web')
-    if settingsLayer == None:
-        d3script.log('StepChaseGenerator','Could not Web module for settings')
-        return
+    if (d3script.D3MAJORVERSION >= 30):
+        expLay = d3script.createLayerOfTypeOnCurrentTrack('ExpressionVariables')
+        newVars = []
+        if expLay == None:
+            d3script.log('StepChaseGenerator','Could not Expression module for settings')
+            return
     
-    sectStart,tag,note =  d3script.getSectionTagNoteForTrackAndTime(state.track,state.player.tRender)
+        sectStart,tag,note = d3script.getSectionTagNoteForTrackAndTime(state.track,state.player.tRender)
+        expLay.setExtents(sectStart,sectStart+30.0)
+        expLay.name = '[Expr] ' + prefix
+        
+        # Create variables
+        def addExpressionVariable(vName, expType=ExpressionVariable.FloatType):
+            ev = ExpressionVariable()
+            ev.name = vName
+            ev.type = expType
+            expLay.moduleConfig.container.variables.append(ev)
+            return ev
+            
+        newVars.append(addExpressionVariable(prefix+'runt'))
+        newVars.append(addExpressionVariable(prefix+'steps'))
+        newVars.append(addExpressionVariable(prefix+'stept'))
+        newVars.append(addExpressionVariable(prefix+'up'))
+        newVars.append(addExpressionVariable(prefix+'hold'))
+        newVars.append(addExpressionVariable(prefix+'down'))
+        newVars.append(addExpressionVariable(prefix+'low'))
+        newVars.append(addExpressionVariable(prefix+'high'))
+          
+        for i in range(0,8):
+            stepName = prefix+'step'+str(i+1)
+            stepVar = addExpressionVariable(stepName,ExpressionVariable.FunctionType)
 
-    settingsLayer.setExtents(sectStart,sectStart+30.0)
-    settingsLayer.name = '[StpC] Settings'
+  
+        markDirty(expLay.moduleConfig)
+        
+        
+        def fieldsChangedCB():
+            
+            if len(expLay.fields) < 16:
+                return
+            
+            d3script.getFieldFromLayerByName(expLay,prefix+'runt').sequence.keys[0].v = 0.0
+            d3script.getFieldFromLayerByName(expLay,prefix+'steps').sequence.keys[0].v = 8.0
+            d3script.getFieldFromLayerByName(expLay,prefix+'stept').sequence.keys[0].v = 1.0
+            d3script.getFieldFromLayerByName(expLay,prefix+'up').sequence.keys[0].v = 0.1
+            d3script.getFieldFromLayerByName(expLay,prefix+'hold').sequence.keys[0].v = 0.8
+            d3script.getFieldFromLayerByName(expLay,prefix+'down').sequence.keys[0].v = 0.1
+            d3script.getFieldFromLayerByName(expLay,prefix+'low').sequence.keys[0].v = 0.1
+            d3script.getFieldFromLayerByName(expLay,prefix+'high').sequence.keys[0].v = 1.0
 
-    outputLayer = d3script.createLayerOfTypeOnCurrentTrack('Web')
-    if settingsLayer == None:
-        d3script.log('StepChaseGenerator','Could not Web module for output')
-        return
+            d3script.setExpression(expLay,prefix+'runt','uptime')
+
     
-    outputLayer.setExtents(sectStart,sectStart+30.0)
-    outputLayer.name = '[StpC] Outputs'
-
-    # Setup settings layer labels and expressions
-    d3script.getFieldFromLayerByName(settingsLayer, 'Name 1').sequence.setString(0,'runt')
-    d3script.getFieldFromLayerByName(settingsLayer, 'Name 2').sequence.setString(0,'numsteps')
-    d3script.getFieldFromLayerByName(settingsLayer, 'Name 3').sequence.setString(0,'stept')
-    d3script.getFieldFromLayerByName(settingsLayer, 'Name 4').sequence.setString(0,'upt')
-    d3script.getFieldFromLayerByName(settingsLayer, 'Name 5').sequence.setString(0,'holdt')
-    d3script.getFieldFromLayerByName(settingsLayer, 'Name 6').sequence.setString(0,'downt')
-    d3script.getFieldFromLayerByName(settingsLayer, 'Name 7').sequence.setString(0,'lowv')
-    d3script.getFieldFromLayerByName(settingsLayer, 'Name 8').sequence.setString(0,'highv')
-
-    d3script.getFieldFromLayerByName(settingsLayer, 'Value 1').sequence.keys[0].v = 0.0
-    d3script.getFieldFromLayerByName(settingsLayer, 'Value 2').sequence.keys[0].v = 8.0
-    d3script.getFieldFromLayerByName(settingsLayer, 'Value 3').sequence.keys[0].v = 1.0
-    d3script.getFieldFromLayerByName(settingsLayer, 'Value 4').sequence.keys[0].v = 0.1
-    d3script.getFieldFromLayerByName(settingsLayer, 'Value 5').sequence.keys[0].v = 0.8
-    d3script.getFieldFromLayerByName(settingsLayer, 'Value 6').sequence.keys[0].v = 0.1
-    d3script.getFieldFromLayerByName(settingsLayer, 'Value 7').sequence.keys[0].v = 0.1
-    d3script.getFieldFromLayerByName(settingsLayer, 'Value 8').sequence.keys[0].v = 1.0
-
-    d3script.setExpression(settingsLayer,'Value 1','runt=uptime')
-    d3script.setExpression(settingsLayer,'Value 2','numsteps=self')
-    d3script.setExpression(settingsLayer,'Value 3','stept=self')
-    d3script.setExpression(settingsLayer,'Value 4','upt=self')
-    d3script.setExpression(settingsLayer,'Value 5','holdt=self')
-    d3script.setExpression(settingsLayer,'Value 6','downt=self')
-    d3script.setExpression(settingsLayer,'Value 7','lowv=self')
-    d3script.setExpression(settingsLayer,'Value 8','highv=self')
+            baseText = """if((PREFIXrunt + STEPINDEX * PREFIXstept)%(PREFIXsteps*PREFIXstept) < PREFIXup,
+                            lerp(PREFIXhigh,PREFIXlow,((PREFIXup) - (PREFIXrunt + STEPINDEX * PREFIXstept)%(PREFIXsteps*PREFIXstept))/PREFIXup),
+                            if((PREFIXrunt + STEPINDEX * PREFIXstept)%(PREFIXsteps*PREFIXstept) <= (PREFIXup+PREFIXhold),
+                                PREFIXhigh,
+                                if(PREFIXdown > 0, 
+                                    lerp(PREFIXhigh,(PREFIXlow),
+                                    clamp(((PREFIXrunt + STEPINDEX * PREFIXstept)%(PREFIXsteps*PREFIXstept) - PREFIXhold - PREFIXup)/PREFIXdown,0,1)), 
+                                    PREFIXlow
+                                )
+                            )
+                          )
+                """
     
-    # Setup output layer labels and expressions
-    d3script.getFieldFromLayerByName(outputLayer, 'Name 1').sequence.setString(0,'step1value')
-    d3script.getFieldFromLayerByName(outputLayer, 'Name 2').sequence.setString(0,'step2value')
-    d3script.getFieldFromLayerByName(outputLayer, 'Name 3').sequence.setString(0,'step3value')
-    d3script.getFieldFromLayerByName(outputLayer, 'Name 4').sequence.setString(0,'step4value')
-    d3script.getFieldFromLayerByName(outputLayer, 'Name 5').sequence.setString(0,'step5value')
-    d3script.getFieldFromLayerByName(outputLayer, 'Name 6').sequence.setString(0,'step6value')
-    d3script.getFieldFromLayerByName(outputLayer, 'Name 7').sequence.setString(0,'step7value')
-    d3script.getFieldFromLayerByName(outputLayer, 'Name 8').sequence.setString(0,'step8value')
+            baseText = baseText.replace(' ','').replace('PREFIX',prefix).replace('\n','').replace(')',')\n')
+            if baseText[-1] == '\n':
+                baseText = baseText[:-1]
+                
+            for i in range(0,8):
+                stepName = prefix+'step'+str(i+1)
+                d3script.getFieldFromLayerByName(expLay,stepName).sequence.keys[0].s = baseText.replace('STEPINDEX',str(i))
+            
+        expLay.onFieldsChangedAction.add(fieldsChangedCB)
+  
+def chasePopup():
+    """Open a popup menu"""
     
-    baseText = """stepSTEPINDEXvalue = if(
-                    (runt + STEPINDEX * stept)%(numsteps*stept) < upt,
-                    lerp(highv,lowv,(upt - (runt + STEPINDEX * stept)%(numsteps*stept))/upt),
-                    if(
-                       (runt + STEPINDEX * stept)%(numsteps*stept) <= (upt+holdt),
-                       highv,
-                       if(downt > 0, lerp(highv,lowv,clamp(((runt + STEPINDEX * stept)%(numsteps*stept) - holdt - upt)/downt,0,1)), lowv)
-                    )
-                )"""
+    menu = PopupMenu('Setup Chase:')
+    menu.add(TextBox('Chase name must be unique in its section of track'))
+    nameStem = "Chase"
+    menu.editItem('Chase Name:', nameStem, setupChaseGenerator)
+    menu.pos = (d3gui.root.size / 2) - (menu.size/2)
+    menu.pos = Vec2(menu.pos[0],menu.pos[1]-100)
+
+    d3gui.root.add(menu)
+    menu.contents.findWidgetByName('Setup Chase:').textBox.focus = True
     
-
-    d3script.setExpression(outputLayer,'Value 1',baseText.replace('STEPINDEX','1'))
-    d3script.setExpression(outputLayer,'Value 2',baseText.replace('STEPINDEX','2'))
-    d3script.setExpression(outputLayer,'Value 3',baseText.replace('STEPINDEX','3'))
-    d3script.setExpression(outputLayer,'Value 4',baseText.replace('STEPINDEX','4'))
-    d3script.setExpression(outputLayer,'Value 5',baseText.replace('STEPINDEX','5'))
-    d3script.setExpression(outputLayer,'Value 6',baseText.replace('STEPINDEX','6'))
-    d3script.setExpression(outputLayer,'Value 7',baseText.replace('STEPINDEX','7'))
-    d3script.setExpression(outputLayer,'Value 8',baseText.replace('STEPINDEX','8'))
-
-
+          
 SCRIPT_OPTIONS = {
     "minimum_version" : 21, # Min. compatible version
     "init_callback" : initCallback, # Init callback if version check passes
@@ -97,7 +110,7 @@ SCRIPT_OPTIONS = {
             "group" : "Chase Generator", # Group to organize scripts menu.  Scripts menu is sorted a separated by group
             "bind_globally" : True, # binding should be global
             "help_text" : "Setup Chase Generator", #text for help system
-            "callback" : setupChaseGenerator, # function to call for the script
+            "callback" : chasePopup, # function to call for the script
         }
         ]
 

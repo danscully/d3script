@@ -16,14 +16,12 @@ def scrollFocusedSmall(scale):
 
 def advancePlayhead(step):
     stepInt = int(step)
-    print('step: ' + str(stepInt))
     if (abs(stepInt) == 1):
         time = state.player.tCurrent + 1 * stepInt
     else:
         grr = state.globalRefreshRate
         time = ((state.player.tCurrent * grr.numerator/float(grr.denominator)) + 2.0 * (stepInt/abs(stepInt))) * (grr.denominator / float(grr.numerator)) 
 
-    print('time: ' + str(time))
     cmd = TransportCMDTrackBeat()
     tm = state.currentTransportManager
     trk = state.track 

@@ -71,10 +71,10 @@ class StatusWidget(Widget):
     def __init__(self):
 
         #define colors
-        self.redColor = Colour(0.8, 0.0, 0.0)
-        self.greenColor = Colour(0.0, 0.8, 0.0)
-        self.purpleColor = Colour(0.5, 0.0, 0.5)
-        self.orangeColor = Colour(0.6, 0.4, 0.0)
+        self.redColor = Colour(0.7, 0.0, 0.0)
+        self.greenColor = Colour(0.0, 0.4, 0.4)
+        self.purpleColor = Colour(0.4, 0.0, 0.4)
+        self.orangeColor = Colour(0.5, 0.3, 0.0)
         self.defaultSize = Vec2(125 * d3gui.dpiScale.x,35 * d3gui.dpiScale.x)
 
         Widget.__init__(self)

@@ -119,7 +119,6 @@ def findBrokenExpressionsInCurrentTrack():
     # get all layers that intersect playhead
 
     allLays = d3script.allLayersOfObject(state.track.layers)
-    print(allLays)
     foundErrors = []
 
     for lay in allLays:
@@ -128,7 +127,6 @@ def findBrokenExpressionsInCurrentTrack():
                 if (f.expression != None) and (not f.expression.isOK):
                     foundErrors.append((state.track.description, str(lay.tStart), lay.name, f.name, f.expression.expression, lay, f.name, state.track, lay.tStart))
 
-    print(foundErrors)
     d3script.showTimeBasedResultsWidget('Broken Expressions',['Track','Time','Layer','Field', 'ExpText'], foundErrors)
 
 
@@ -163,7 +161,7 @@ def addEffectLayersToSelectedLayers(moduleName):
             lay.name += ' EXPSRC'
 
         #set the brightness of the effect layer to the expression link to the source layer        
-        expString = 'module:' + d3script.expressionSafeString(lay.name) + '.brightness'
+        expString = 'getByUID(' + hex(lay.uid)[:-1] + ').brightness'
         d3script.setExpression(newLayer, 'brightness', expString)
 
         #set the blend mode directly to be the blendmode of the sourceLayer
@@ -569,9 +567,10 @@ def doComboRename(newNameStem):
         if (newNameStem[0] == '!'):
             i.name = newNameStem[1:]
 
-        elif (i.name.find('EXPSRC') != -1):
+        #Now that we exp link via UID I'm not checking this anymore
+        #elif (i.name.find('EXPSRC') != -1):
             #We don't rename layers with EXPSRC in their name
-            continue
+            #continue
 
         else:
             keyResource = None
@@ -858,7 +857,7 @@ SCRIPT_OPTIONS = {
         {
             "name" : "Goto Nearest Cue", # Display name of script
             "group" : "Track Tools", # Group to organize scripts menu.  Scripts menu is sorted a separated by group
-            "binding" : "KeyPress,Ctrl + Shift,G",
+            "binding" : "KeyPress,Ctrl,q",
             "bind_globally" : True, # binding should be global
             "help_text" : "Find the nearest cue and go to it", #text for help system
             "callback" : nearestCuePopup, # function to call for the script
