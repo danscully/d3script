@@ -100,7 +100,7 @@ Creates a one-stop-shop for status, including Up/Down/Hold status, transport Eng
 
 ## StepChaseGenerator.py
 <img src="sampleimages/Stepchase.PNG" align="right" width="400px" />
-This script will create two web modules on your timeline to implement simple step-based chases. The first has a series of parameters like "number of steps", "max level", "min level", "up time", "hold time", etc that you can set to control the effect.  The second module contains 8 possible step values that create expression variables you can reference in the layers you wish to step.  Everything is currently based on the "upTime" expression global so the chase is not deterministic (e.g. won't always start in the same place).  But in the settings module you can use the frame counter of another layer as a timer if you wish to make it deterministic to the start of a section. NOTE: SHOULD BE REBUILT TO BEHAVE BETTER WITH THE EXPRESSION CHANGES IN CURRENT D3 RELEASES.
+This script will create a ExpVar module on your timeline to implement simple step-based chases. It has a series of parameters like "number of steps", "max level", "min level", "up time", "hold time", etc that you can set to control the effect.  The second module contains 8 possible step values that create expression variables you can reference in the layers you wish to step.  Everything is currently based on the "upTime" expression global so the chase is not deterministic (e.g. won't always start in the same place).  But you can use the frame counter of another layer as a timer if you wish to make it deterministic to the start of a section.
 
 <br clear="right" />
 
