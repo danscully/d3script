@@ -33,7 +33,7 @@ This script patches the existing Cue List widget so that if a valid cue number i
 This script will stop the transport control buttons from flashing, and instead have them highlight in a color.
 
 ## Dashboard
-<img src="sampleimages/Dashboard.PNG" align="right" width="200px" />
+<img src="sampleimages/Dashboard.png" align="right" width="200px" />
 Might be best explained as an "Open Module" without time.  Lets you arrow most editor fields into one widget, as well as "newstyle" expression variables (those defined in an expressions device on variable layer module).  Optionally, by right-clicking on the field, you can add a "Green Match" value, which will add a green highlight if it matches the value.  Alternatively, you can specify min/max values and have that highlight show as a bar graph.
 
 <br clear="right" />
