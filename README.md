@@ -27,14 +27,19 @@ For the included scripts, make a folder in the project root called "scripts".  D
 Here is an overview of the scripts included in this release:
 
 ## BetterCueList
-This script patches the existing Cue List widget so that  if a valid cue number is entered in the search box, only exact matches are shown, or if no exact match exists in a track, the immediately preceding cue is shown (like the "Out of Order Sync" behavior in Eos)
+This script patches the existing Cue List widget so that if a valid cue number is entered in the search box, only exact matches are shown, or if no exact match exists in a track, the immediately preceding cue is shown (like the "Out of Order Sync" behavior in Eos)
 
 ## DeFlash
 This script will stop the transport control buttons from flashing, and instead have them highlight in a color.
 
+## Dashboard
+<img src="sampleimages/Dashboard.PNG" align="right" width="200px" />
+Might be best explained as an "Open Module" without time.  Lets you arrow most editor fields into one widget, as well as "newstyle" expression variables (those defined in an expressions device on variable layer module).  Optionally, by right-clicking on the field, you can add a "Green Match" value, which will add a green highlight if it matches the value.  Alternatively, you can specify min/max values and have that highlight show as a bar graph.
+
+<br clear="right" />
+
 ## EncoderLink
 Provides functions that are useful when combined with an external encoder, like the knobs on a Streamdeck plus.  Look at code and the Companion config for more information.
-
 
 ## EosLink
 <img src="sampleimages/EosLink.PNG" align="right" width="200px" />
