@@ -52,7 +52,53 @@ scriptMods = []
 debugmode = False
 shell = win32com.client.Dispatch('WScript.Shell')
 
-#utility functions - should these move somewhere else?
+
+def dumpObject(obj):
+
+    builtins = ['int','float','long','bool']
+    widgetDirs = dir(Widget)
+    intText = "int(x=0) -> int or long int(x, base=10) -> int or long  Convert a number or string to an integer, or return 0 if no arguments are given.  If x is floating point, the conversion truncates towards zero. If x is outside the integer range, the function returns a long instead.  If x is not a number or if base is given, then x must be a string or Unicode object representing an integer literal in the given base.  The literal can be preceded by '+' or '-' and be surrounded by whitespace. The base defaults to 10.  Valid bases are 0 and 2-36.  Base 0 means to interpret the base from the string as an integer literal. >>> int('0b100', base=0) 4"
+    longText = "long(x=0) -> long long(x, base=10) -> long  Convert a number or string to a long integer, or return 0L if no arguments are given.  If x is floating point, the conversion truncates towards zero.  If x is not a number or if base is given, then x must be a string or Unicode object representing an integer literal in the given base.  The literal can be preceded by '+' or '-' and be surrounded by whitespace. The base defaults to 10.  Valid bases are 0 and 2-36.  Base 0 means to interpret the base from the string as an integer literal. >>> int('0b100', base=0) 4L"
+    strText = "str(object='') -> string  Return a nice string representation of the object. If the argument is a string, the return value is the same object."
+    floatText = "float(x) -> floating point number  Convert a string or number to a floating point number, if possible."
+    boolText = "bool(x) -> bool  Returns True when the argument x is true, False otherwise. The builtins True and False are the only two instances of the class bool. The class bool is a subclass of the class int, and cannot be subclassed."
+    dictText = "dict() -> new empty dictionary dict(mapping) -> new dictionary initialized from a mapping object's     (key, value) pairs dict(iterable) -> new dictionary initialized as if via:     d = {}     for k, v in iterable:         d[k] = v dict(**kwargs) -> new dictionary initialized with the name=value pairs     in the keyword argument list.  For example:  dict(one=1, two=2)"
+    listText = "list() -> new empty list list(iterable) -> new list initialized from iterable's items"
+
+    for attr in dir(obj):
+        if attr in builtins:
+            continue
+        if attr[0:2] == '__':
+            continue
+        if attr in widgetDirs and type(obj) != Widget and (issubclass(type(obj),Widget)):
+            continue
+
+        attrObj = getattr(obj,attr)
+        doc = attrObj.__doc__
+        if (doc == None):
+            doc = ""
+        doc = doc.replace("\r", "").replace("\n", " ").replace(intText, "").replace(longText, "").replace(strText, "").replace(floatText, "").replace(boolText, "").replace(dictText, "").replace(listText, "")
+
+        if hasattr(attrObj,'__call__'):
+            print (attr + ' :: ' + doc)
+        elif doc != "":
+            print(attr + ' :: ' + str(attrObj) + ' :: ' + str(type(attrObj)) + ' :: ' + doc)
+        else:
+            print(attr + ' :: ' + str(attrObj) + ' :: ' + str(type(attrObj)))
+
+
+
+def fakeRightMouseClick(x,y):
+    win32api.SetCursorPos((x,y))
+    time.sleep(0.2)
+    win32api.mouse_event(win32con.MOUSEEVENTF_RIGHTDOWN, x, y, 0, 0)
+    time.sleep(0.2)
+    win32api.mouse_event(win32con.MOUSEEVENTF_RIGHTUP, x, y, 0, 0)
+    time.sleep(0.2)
+
+def setCursorPos(x,y):
+    win32api.SetCursorPos((int(x),int(y)))
+
 def log(sender, msg,debugOnly = False):
     """
     A wrapper for printing to the console.
@@ -167,7 +213,33 @@ def setPersistentValue(key,value,domain=None):
 
     note.text = json.dumps(localDict,indent=4)
 
+def refreshEditorsForLayer(layer):
+    """
+    Searches through open layer editors and refreshes them.  Useful when making programmitic changes like
+    in the preset manager or de-sequencer
+    """
 
+    oem = getTrackWidget().layerView.openEditorManager
+    oles = oem.openLayerEditors.values()
+
+    for ole in oles:
+        if layer in ole.layers:
+            ole.refresh()
+
+
+def copyLayerToTime(layer,time):
+    """
+    Copies they layer passed in and places it on the current track at the time indicated.
+    """
+    if not isinstance(layer,SuperLayer):
+        #do nothing
+        return
+    
+    layerCopy = layer.copy()
+    state.track.addLayer(layerCopy,time,state.track.nLayers())
+    
+    
+    
 def createLayerOfTypeOnCurrentTrack(moduleType):
     """
     Creates a new on the current Track of the type specified (by module name in New Layer popup).
@@ -349,6 +421,8 @@ def allLayersOfObject(layerSource):
     """
     Returns all nested layers of an object (usually track).
     """
+
+    
         
     foundLayers = []
     
@@ -360,6 +434,23 @@ def allLayersOfObject(layerSource):
     return foundLayers
 
 
+def getTrackForLayer(lay):
+    if (ReleaseVersion.major() < 22):
+        if len(lay.tracks) > 0:
+            return lay.tracks[0]
+        else:
+            return None
+    else:
+        return lay.track
+    
+def getSectionIndexForTrackAndTime(track,time):
+    if (ReleaseVersion.major() < 22):
+        return track.sections.find(time)
+        #This may not be the right version for change, but its right for me now
+    else:
+        return track.sections.find(time, time)
+
+
 def getSectionTagNoteForTrackAndTime(track,time):
     """
     Return the cue tag and the note for a particular time
@@ -368,14 +459,19 @@ def getSectionTagNoteForTrackAndTime(track,time):
     sectIndex = track.beatToSection(beat)
     sectStart = track.sections.getT(sectIndex)
 
-    tagIndex = track.tags.find(sectStart,sectStart)
+    if (ReleaseVersion.major() < 22):
+        #This may not be the right version for change, but its right for me now
+        tagIndex = track.tags.find(sectStart)
+        noteIndex = track.notes.find(sectStart)
+    else:
+        tagIndex = track.tags.find(sectStart,sectStart)
+        noteIndex = track.notes.find(sectStart, sectStart)
+
     if (tagIndex == -1) or (track.tags.getT(tagIndex) != sectStart):
         newTag = ""
     else:
         newTag = track.tags.getV(tagIndex).split()[1]
 
-        
-    noteIndex = track.notes.find(sectStart, sectStart)
     if (noteIndex == -1) or (track.notes.getT(noteIndex) != sectStart):
         newNote = ""
     else:
@@ -418,8 +514,6 @@ def showTimeBasedResultsWidget(title, columnNames, results):
     result[-2] must be a track, and result[-1] a time in that track
     """
     def handleItemClick(item,colIndex,resultsWidget):
-        print('track: '+str(item.values[-2]))
-        print('time: '+str(item.values[-1]))
         time = item.values[-1]
         track = item.values[-2]
         fieldName = item.values[-3]
@@ -485,7 +579,7 @@ def standardModuleAbbreviation(modName):
     elif modName == "Notch":
         modAbbr = "[Ntch]"
     else:
-        modAbbr = modName[0:4]
+        modAbbr = "[" + modName[0:4] + "]"
 
     return modAbbr
 
@@ -662,6 +756,30 @@ def open_scripts_menu():
         script_gui_menu.parent.moveToFront()
 
 
+class D3Script():
+
+    @staticmethod
+    def findByName(name):
+        for s in scripts:
+            if (s.name == name):
+                return s
+        return None
+    
+    @staticmethod
+    def loadFromPath(path):
+        name = path.replace("d3script/","")
+        return D3Script.findByName(name)
+    
+    def __init__(name, group, binding=None):
+        self.name = name
+        self.group = group
+        self.binding = binding
+    
+    @property
+    def path(self):
+        return 'd3script/'+self.name
+    
+
 def register_script(mod):
     """
     This function has two responsiblities:
@@ -737,10 +855,9 @@ def register_script(mod):
                 #ignoring global scope for now. FIX FIX FIX - This is ugly
                 d3gui.root.inputMap.add(script['callback'], script['binding'], helptext)
             except:
-                log('d3script','Error while registering ' + mod.__name__ + '. Could not make script binding.')
+                log('d3script','Error while registering ' + mod.__name__ + ':' + script['name'] + '. Could not make script binding.')
             
         if script not in scripts:
-            log('d3script','Adding script ' + script['name'] + ' to scripts list.')
             scripts.append(script)
     
     def script_sort(val):
@@ -775,10 +892,10 @@ class ScriptMenu(Widget):
         Widget.__init__(self)   
         self.titleButton = TitleButton(SCRIPTMENUTITLE)
         self.add(self.titleButton)
-        bt = Button('Reload Scripts',load_scripts)
-        bt.border = Vec2(0,10)
+        #bt = Button('Reload Scripts',load_scripts)
+        #bt.border = Vec2(0,10)
 
-        self.add(bt)
+        #self.add(bt)
         self.pos = Vec2(d3gui.root.size.x - 300, 50)
         self.arrangeVertical()
         self.minSize = Vec2(1000,800)
@@ -801,6 +918,7 @@ class ScriptMenu(Widget):
             #self.buttons.append(bt)
             groupWidget.add(bt)
 
+        self.pos = Vec2(1820.0,41.0)
         d3gui.root.add(self)
         self.titleButton.toggleSticky()
 
