@@ -16,13 +16,29 @@ def refresh_patch(widget):
         beats = [ CueItem(track, beat, widget.view) for beat in track.noteTagSectionBeats() if widget.filter_cue(track, beat) ]
 
         try:
-            targetNumber = float(widget.searchString)
+            
+            #handle SACN cues
+            searchStringSplits = widget.searchString.split('.')
+            if (len(searchStringSplits) == 3):
+                searchString = searchStringSplits[0] + searchStringSplits[1] + '.' + searchStringSplits[2]
+            else:
+                searchString = widget.searchString
+                
+            targetNumber = float(searchString)
             prevMatchTime = None
 
             for i in range(0,track.tags.n()):
                 tagText = track.tags.getV(i)
                 if ("CUE " in tagText):
-                    cueNumber = float(tagText[4:])
+                    cueText = tagText[4:]
+                    
+                    #Deal with sACN Cues
+                    cueTextSplits = cueText.split('.')
+                    if (len(cueTextSplits) == 3):
+                        cueText = cueTextSplits[0] + cueTextSplits[1] + '.' + cueTextSplits[2]
+                        
+                    cueNumber = float(cueText)
+                    
                     if (cueNumber <= targetNumber):
                         prevMatchTime = track.tags.getT(i)
                     elif (cueNumber == targetNumber):
