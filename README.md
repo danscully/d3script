@@ -27,7 +27,7 @@ For the included scripts, make a folder in the project root called "scripts".  D
 Here is an overview of the scripts included in this release:
 
 ## BetterCueList
-This script patches the existing Cue List widget so that if a valid cue number is entered in the search box, only exact matches are shown, or if no exact match exists in a track, the immediately preceding cue is shown (like the "Out of Order Sync" behavior in Eos)
+This script patches the existing Cue List widget so that if a valid cue number is entered in the search box, only exact matches are shown, or if no exact match exists in a track, the immediately preceding cue is shown (like the "Out of Order Sync" behavior in Eos).  It also supports sACN cue numbers as well.
 
 ## DeFlash
 This script will stop the transport control buttons from flashing, and instead have them highlight in a color.
