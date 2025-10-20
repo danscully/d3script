@@ -43,7 +43,7 @@ def switchToTrack(track):
                 break
     
     else:
-        tks = state.currentSetList.tracks
+        tks = d3script.getCurrentSetList.tracks
         for tk in tks:
             if (tk.description == track):
                 cmd = TransportCMDTrackBeat()
@@ -54,27 +54,27 @@ def switchToTrack(track):
   
 
 def hardMuteLayers():
-    op = Undoable('deSequence Layers')
+    op = Undoable('hard mute layers')
     lays = d3script.getSelectedLayers()
 
     for lay in lays:
         d3script.setExpression(lay,'brightness','0')
-        lay.name = 'MUTED ' + lay.name
+        lay.name = 'SUPPRESSED ' + lay.name
 
 
 def hardUnMuteLayers():
-    op = Undoable('deSequence Layers')
+    op = Undoable('hard unmute layers')
     lays = d3script.getSelectedLayers()
 
     for lay in lays:
         d3script.setExpression(lay,'brightness','self')
-        if (lay.name.find('MUTED') == 0):
-            lay.name = lay.name[6:]
+        if (lay.name.find('SUPPRESSED ') == 0):
+            lay.name = lay.name[11:]
 
 
 def duplicateSelectedLayers():
     """Duplicate Selected Layers"""
-    op = Undoable('deSequence Layers')
+    op = Undoable('duplicate selected layers')
     lv = d3script.getTrackWidget().layerView
     if len(lv.selectedLayerIDs) > 0:
         lv._duplicateSelected()
@@ -82,7 +82,7 @@ def duplicateSelectedLayers():
 
 def splitSelectedLayers():
     """Split selected layers"""
-    op = Undoable('deSequence Layers')
+    op = Undoable('split selected layers')
     tw = d3script.getTrackWidget()
     lv = tw.layerView
     if len(lv.selectedLayerIDs) > 0:
@@ -93,7 +93,7 @@ def splitSelectedLayers():
 
 def moveSelectedLayersToPlayhead():
     """Move selected layers to playhead"""
-    op = Undoable('deSequence Layers')
+    op = Undoable('move selected layers to playhead')
     tw = d3script.getTrackWidget()
     lv = tw.layerView
     if len(lv.selectedLayerIDs) > 0:    
@@ -104,7 +104,7 @@ def moveSelectedLayersToPlayhead():
 
 def trimSelectedLayersToPlayhead():
     """Trim selected layers to playhead"""
-    op = Undoable('deSequence Layers')
+    op = Undoable('trim selected layers to playhead')
     tw = d3script.getTrackWidget()
     lv = tw.layerView
     if len(lv.selectedLayerIDs) > 0:    
@@ -118,14 +118,15 @@ def trimSelectedLayersToPlayhead():
 def findBrokenExpressionsInCurrentTrack():
     # get all layers that intersect playhead
 
-    allLays = d3script.allLayersOfObject(state.track.layers)
+    track = d3script.getCurrentTrack()
+    allLays = d3script.allLayersOfObject(track.layers)
     foundErrors = []
 
     for lay in allLays:
         if hasattr(lay,'fields'):
             for f in lay.fields:
                 if (f.expression != None) and (not f.expression.isOK):
-                    foundErrors.append((state.track.description, str(lay.tStart), lay.name, f.name, f.expression.expression, lay, f.name, state.track, lay.tStart))
+                    foundErrors.append((track.description, str(lay.tStart), lay.name, f.name, f.expression.expression, lay, f.name, track, lay.tStart))
 
     d3script.showTimeBasedResultsWidget('Broken Expressions',['Track','Time','Layer','Field', 'ExpText'], foundErrors)
 
@@ -137,7 +138,7 @@ def addEffectLayersToSelectedLayers(moduleName):
 
     for lay in lays:
         newLayer = d3script.createLayerOfTypeOnCurrentTrack(moduleName)
-        trk = state.track
+        trk = d3script.getCurrentTrack()
         if newLayer == None:
             d3script.log('TrackTools','Could not create effect layer of type: ' + moduleName)
             continue
@@ -225,13 +226,14 @@ def showLayerTimingInfo(trustNoSequence = True):
             if (fld.name == 'video') and (keyCount >= keysNeeded):
 
                 for k in activeKeys:
-                    sectStart, tag, note = d3script.getSectionTagNoteForTrackAndTime(state.track, k.localT)
+                    track = d3script.getCurrentTrack()
+                    sectStart, tag, note = d3script.getSectionTagNoteForTrackAndTime(track, k.localT)
                     mediaTransField= d3script.getFieldFromLayerByName(lay,'transition time')
                     t = mediaTransField.sequence.findCurrentKeyTime(k.localT)
                     transKey = filter(lambda k: k.localT == t,mediaTransField.sequence.keys)[0]
                     cueDescription = tag + ' (' + note + ')' 
                     animDescription = str(round((k.localT - sectStart), 2)) + '@' + k.r.description + '(' + str(transKey.v) + ')'
-                    timedEvents.append((lay.name, fld.name, cueDescription, animDescription, lay, fld.name, state.track, k.localT))
+                    timedEvents.append((lay.name, fld.name, cueDescription, animDescription, lay, fld.name, track, k.localT))
 
             elif (fld.name != 'transition time') and (keyCount >= keysNeeded):
 
@@ -252,10 +254,11 @@ def showLayerTimingInfo(trustNoSequence = True):
                     elif (k.interpolation == k.select):
                         interpolationFlag = '[S]'
 
-                    sectStart, tag, note = d3script.getSectionTagNoteForTrackAndTime(state.track, k.localT)
+                    track = d3script.getCurrentTrack()
+                    sectStart, tag, note = d3script.getSectionTagNoteForTrackAndTime(track, k.localT)
                     cueDescription = tag + ' (' + note + ')' 
                     animDescription = str(round((k.localT - sectStart), 2)) + interpolationFlag + '@' + val
-                    timedEvents.append((lay.name,fld.name,cueDescription,animDescription, lay, fld.name,state.track, k.localT))
+                    timedEvents.append((lay.name,fld.name,cueDescription,animDescription, lay, fld.name,track, k.localT))
 
     #Show results
     columnNames = ['Layer','field','cue','key']
@@ -264,16 +267,22 @@ def showLayerTimingInfo(trustNoSequence = True):
 
 def showSectionTimingInfo(trustNoSequence = True):
 
+    track = d3script.getCurrentTrack()
+    player = d3script.getPlayer()
     #get the section times
-    sects = state.track.sections
-    scIndex = d3script.getSectionIndexForTrackAndTime(state.track, state.player.tCurrent)
 
+    if (d3script.is31_or_newer()):
+        scStart = track.beatToTime(track.findBeatOfLastSection(track.timeToBeat(player.tCurrent))) - Key.tEpsilon
+        scEnd = track.beatToTime(track.findBeatOfNextSection(track.timeToBeat(player.tCurrent)))
+    else:
     #We subtract Key.tEpsilon for snap cues
-    scStart = sects.getT(scIndex) - Key.tEpsilon
-    scEnd = sects.getT(scIndex + 1)
+        sects = track.sections
+        scIndex = d3script.getSectionIndexForTrackAndTime(track, player.tCurrent)
+        scStart = sects.getT(scIndex) - Key.tEpsilon
+        scEnd = sects.getT(scIndex + 1)
 
     # get all layers that intersect playhead
-    lays = filter(lambda l: layerInSection(l,scStart,scEnd), state.track.layers)
+    lays = filter(lambda l: layerInSection(l,scStart,scEnd), track.layers)
 
     allLays = lays
     for lay in lays:
@@ -312,7 +321,7 @@ def showSectionTimingInfo(trustNoSequence = True):
                     transKey = filter(lambda k: k.localT == t,mediaTransField.sequence.keys)[0]
                     animDescription += '+' + str(round((k.localT - scStart), 2)) + '@' + k.r.description + '(' + str(transKey.v) + ') '
 
-                timedEvents.append((lay.name, fld.name, animDescription, lay, fld.name, state.track, None))
+                timedEvents.append((lay.name, fld.name, animDescription, lay, fld.name, track, None))
 
             elif (fld.name != 'transition time') and (keyCount >= keysNeeded):
 
@@ -337,7 +346,7 @@ def showSectionTimingInfo(trustNoSequence = True):
 
                     animDescription += '+' + str(round((k.localT - scStart), 2)) + interpolationFlag + '@' + val + ' '
 
-                timedEvents.append((lay.name, fld.name, animDescription, lay, fld.name, state.track, None))
+                timedEvents.append((lay.name, fld.name, animDescription, lay, fld.name, track, None))
 
     #Show results
     columnNames = ['Layer','field','keys']
@@ -347,7 +356,8 @@ def showSectionTimingInfo(trustNoSequence = True):
 def importLayerFromLibraryByName(layerName):
     #Move cursor because the import function likes to move the playhead to the cursos
     tw = d3script.getTrackWidget()
-    d3gui.cursorPos = Vec2(tw.barWidget.tToX(state.player.tCurrent) - tw.scrollWidget.hScroll.absOffset,d3gui.cursorPos[1])
+    player = d3script.getPlayer()
+    d3gui.cursorPos = Vec2(tw.barWidget.tToX(player.tCurrent) - tw.scrollWidget.hScroll.absOffset,d3gui.cursorPos[1])
     
     a = tw.barWidget.popupBarMenu()
     widgets = d3gui.root.children
@@ -400,8 +410,8 @@ class UpdateSectionTagAndNote(Widget):
 
     def __init__(self):
         
-        self.trk = state.track
-        self.time = state.player.tCurrent
+        self.trk = d3script.getCurrentTrack()
+        self.time = d3script.getPlayer().tCurrent
         self.sectStart, self.newTag, self.newNote = d3script.getSectionTagNoteForTrackAndTime(self.trk, self.time)
 
         Widget.__init__(self)
@@ -432,14 +442,26 @@ class UpdateSectionTagAndNote(Widget):
 
     def updateTagAndNote(self):
         op = Undoable('Update Tag and Note for Section')
-        if (self.newTag != ''):
+
+        if d3script.is31_or_newer():
+            self.trk.removeTags(self.sectStart,0)
+            self.trk.removeTags(self.sectStart,1)
+            self.trk.removeTags(self.sectStart,2)
             if ":" in self.newTag:
-                self.newTag = "TC " + self.newTag
+                self.trk.setTagAtBeat(self.trk.timeToBeat(self.sectStart),Tag(0,self.newTag))    
             else:
-                self.newTag = "CUE " + self.newTag
-        
-        self.trk.setTagAtBeat(self.sectStart,self.newTag)
-        self.trk.setNoteAtBeat(self.sectStart, self.newNote)
+                self.trk.setTagAtBeat(self.trk.timeToBeat(self.sectStart),Tag(1,self.newTag))
+
+        else:
+            if (self.newTag != ''):
+                if ":" in self.newTag:
+                    self.newTag = "TC " + self.newTag
+                else:
+                    self.newTag = "CUE " + self.newTag
+           
+            self.trk.setTagAtBeat(self.trk.timeToBeat(self.sectStart),self.newTag)
+
+        self.trk.setNoteAtBeat(self.trk.timeToBeat(self.sectStart), self.newNote)
         self.close()
 
 
@@ -449,12 +471,21 @@ def openTagAndNotePopup():
 
 def smartMergeCurrentSection():
     op = Undoable('Smart Merge Current Section')
-    trk = state.track
-    time = state.player.tCurrent
-    sectStart = trk.sections.getT(trk.sections.find(time,time))
-    trk.sections.removeAtTime(sectStart)
-    trk.notes.removeAtTime(sectStart)
-    trk.tags.removeAtTime(sectStart)
+    trk = d3script.getCurrentTrack()
+    time = d3script.getPlayer().tCurrent
+    if (d3script.is31_or_newer()):
+        sectStart = track.findBeatOfLastSection(track.timetoBeat(time))
+    else:
+        sectStart = trk.sections.getT(trk.sections.find(time,time))
+
+    if d3script.is31_or_newer():
+        trk.removeTags(trk.timeToBeat(time),Key.tEpsilon)
+        trk.mergeSectionAtBeat(trk.timeToBeat(time))
+        trk.removeNoteAtBeat(trk.timeToBeat(time))
+    else:
+        trk.sections.removeAtTime(sectStart)
+        trk.notes.removeAtTime(sectStart)
+        trk.tags.removeAtTime(sectStart)
 
 
 def trackSearch(searchString):
@@ -502,8 +533,15 @@ def trackSearch(searchString):
             continue
         
         trackName = trk.description
-        trkTime = trk.findBeatOfLastTag(trk.timeToBeat(lay.tStart)) 
-        cueTag = trk.tagAtBeat(trkTime)
+        trkTime = trk.findBeatOfLastTag(trk.timeToBeat(lay.tStart))
+        if d3script.is31_or_newer():
+            cueTag = ''
+            tags = trk.tagsAtBeat(trkTime)
+            if len(tags) > 0:
+                cueTag = tags[0].text
+        else:     
+            cueTag = trk.tagAtBeat(trkTime)
+
         cueLabel = trk.noteAtBeat(trkTime)
         layName = lay.description
         resName = l[1].description
@@ -540,7 +578,7 @@ def ungroupSelectedLayers():
     for lay in lays:
         if not isinstance(lay,GroupLayer):
             continue
-        state.track.ungroupLayer(lay)
+        d3script.getCurrentTrack().ungroupLayer(lay)
 
 
 def groupPopup():
@@ -615,6 +653,32 @@ def doComboRename(newNameStem):
             i.name = moduleName + mapName + localNameStem
 
 
+def cleanupTrailingNumbersInName():
+    selectedLayers = d3script.getSelectedLayers()
+
+    for lay in selectedLayers:
+        lay.name = re.sub(r'\s\d+$', '', lay.name)
+
+
+def gradientSelfLink():
+    selectedLayers = d3script.getSelectedLayers()
+    if not selectedLayers:
+        return
+    
+    for lay in selectedLayers:
+        if type(lay.module).__name__ != 'GradientModule':
+            print ('skipping ' + lay.name)
+            continue
+        
+        #2nd_xCol
+        #2nd_yCol
+        colXString = 'getByUID(' + hex(lay.uid)[:-1] + ').xCol'
+        colYString = 'getByUID(' + hex(lay.uid)[:-1] + ').yCol'
+
+        d3script.setExpression(lay,'2nd xCol',colXString)
+        d3script.setExpression(lay,'2nd yCol',colYString)
+
+
 def renamePopup():
     """Open a popup menu with rename options"""
     selectedLayerObjects = d3script.getSelectedLayers()
@@ -654,41 +718,62 @@ def renamePopup():
 
 
 def doJumpToNearestCue(target):
-    track = state.track
-    tags = track.tags
+    track = d3script.getCurrentTrack()
+    jumpTime = None
+
     try:
         targetNumber = float(target)
     except:
         alert('The cue is not a valid format.')
         return
-        
+
+
+    tags = track.tags    
     if tags.n < 1:
         alert('There are no cue tags to search through.')
         return
     
-    jumpTime = None
 
-    for i in range(0,tags.n()):
-        tagText = tags.getV(i)
-        if (tagText == "CUE " + target):
-            jumpTime = tags.getT(i)
-            break
-
-        elif ("CUE " in tagText):
-            try:
-                cueNumber = float(tagText[4:])
-            except:
+    if d3script.is31_or_newer():
+        cueBeats = track.cueBeats()
+        for beat in cueBeats:
+            tag = trk.cueAtBeat(beat).getTag(1)
+            if (tag == None):
                 continue
-            if (cueNumber < targetNumber):
-                jumpTime = tags.getT(i)
-            else:
+            
+            if tag.text == target:
+                jumpTime = track.beatToTime(beat)
                 break
+            else:
+                try:
+                    cueNumber = float(tag.text)
+                except:
+                    continue
+                if (cueNumber < targetNumber):
+                    jumpTime = track.beatToTime(beat)
+            
+    else:    
+        for i in range(0,tags.n()):
+            tagText = tags.getV(i)
+            if (tagText == "CUE " + target):
+                jumpTime = tags.getT(i)
+                break
+
+            elif ("CUE " in tagText):
+                try:
+                    cueNumber = float(tagText[4:])
+                except:
+                    continue
+                if (cueNumber < targetNumber):
+                    jumpTime = tags.getT(i)
+                else:
+                    break
     
     if (jumpTime == None):
         d3.alertInfo('Did not find a good cue match.')
         
     cmd = TransportCMDTrackBeat()
-    tm = d3.state.currentTransportManager
+    tm = d3script.getCurrentTransportManager()
     trackTime = track.findBeatOfLastTag(track.timeToBeat(jumpTime))
     cmd.init(d3gui.root, tm, track, track.timeToBeat(jumpTime), track.transitionInfoAtBeat(trackTime))
     tm.addCommand(cmd)
@@ -784,6 +869,13 @@ SCRIPT_OPTIONS = {
             "callback" : hardUnMuteLayers, # function to call for the script
         },
         {
+            "name" : "Self Link Gradient", # Display name of script
+            "group" : "Track Tools", # Group to organize scripts menu.  Scripts menu is sorted a separated by group
+            "bind_globally" : True, # binding should be global
+            "help_text" : "Links the 2nd Col X/Y to the main X/Y of the grad layer", #text for help system
+            "callback" : gradientSelfLink, # function to call for the script
+        },
+        {
             "name" : "Add Effect Layers to Selected Layers", # Display name of script
             "group" : "Track Tools", # Group to organize scripts menu.  Scripts menu is sorted a separated by group
             "bind_globally" : True, # binding should be global
@@ -861,7 +953,16 @@ SCRIPT_OPTIONS = {
             "bind_globally" : True, # binding should be global
             "help_text" : "Find the nearest cue and go to it", #text for help system
             "callback" : nearestCuePopup, # function to call for the script
+        },
+        {
+            "name" : "Cleanup Trailing Numbers in Name", # Display name of script
+            "group" : "Track Tools", # Group to organize scripts menu.  Scripts menu is sorted a separated by group
+            "bind_globally" : True, # binding should be global
+            "help_text" : "Removes the trailing additional numbers appended to copied/duped layers", #text for help system
+            "callback" : cleanupTrailingNumbersInName, # function to call for the script
         }
         ]
 
     }
+
+

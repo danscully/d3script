@@ -1,4 +1,4 @@
-# SearchTrack
+# PresetManager3
 from gui.inputmap import *
 from d3 import *
 from gui.columnlistview import *
@@ -14,16 +14,28 @@ def initCallback():
 def applyPreset(preset):
     PMPreset.applyByName(preset)  
 
+def applyMappingByName(name):
+    PMPreset.applyMappingByName(name)  
+
 class PMPreset():
 
     presets = []
+
+    @staticmethod
+    def applyMappingByName(name):
+        mappings = filter(lambda x: x.description == name,resourceManager.allResources(Projection))
+        if len(mappings) != 1:
+            d3script.log('pm3','Could not find single mapping')
+            return
+        else:
+            PMPreset.applyResourceToField(mappings[0],'mapping')
 
     @staticmethod
     def applyResourceToField(resource, field):
 
         saveType = globals().keys()[globals().values().index(type(resource))]
         valueSet = [{'field':field,'flags':'','type':saveType, 'keys':[(resource.description,'<none>',Key.select)]}]
-        preset = PMPreset("temp",valueSet,True)
+        preset = PMPreset("temp",valueSet,[],True)
         preset.applyPreset()
 
     @staticmethod
@@ -31,7 +43,12 @@ class PMPreset():
         d3script.log("PresetManager3","Saving Presets")
         presetList = []
         for p in PMPreset.presets:
-            presetList.append({'name':p.name,'fieldValues':p.fieldValues})
+            if hasattr(p,'variables'):
+                variables = p.variables
+            else:
+                variables = []
+
+            presetList.append({'name':p.name,'fieldValues':p.fieldValues, 'variables':variables})
         
         d3script.setPersistentValue('PM3Settings',presetList,'PM3Settings')
 
@@ -43,7 +60,10 @@ class PMPreset():
         if data != None:
             d3script.log("PresetManager3","Loading Presets")
             for p in data:
-                PMPreset(p['name'],p['fieldValues'])
+                if "variables" in p:
+                    PMPreset(p['name'],p['fieldValues'],p['variables'])
+                else:
+                    PMPreset(p['name'],p['fieldValues'],[])
 
     @staticmethod
     def findByName(presetName):
@@ -65,9 +85,9 @@ class PMPreset():
         name = path.replace("pmpreset/","")
         return PMPreset.findByName(name)
 
-    def __init__(self,name, fieldValues,hidden=False):   
+    def __init__(self,name, fieldValues,variables,hidden=False):   
         PMPreset.presets.append(self)
-        self.update(name, fieldValues,hidden)
+        self.update(name, fieldValues,variables, hidden)
 
     @property
     def path(self):
@@ -77,9 +97,12 @@ class PMPreset():
     def description(self):
         return "pmpreset"
 
-    def update(self, name, fieldValues,hidden=False):
+    def update(self, name, fieldValues, variables, hidden=False):
         self.name = name
         self.fieldValues = fieldValues
+        self.variables = variables
+        self.hidden = hidden
+        
         if not hidden:
             PMPreset.savePresets()
 
@@ -87,12 +110,18 @@ class PMPreset():
         PMPreset.presets.remove(self)
         PMPreset.savePresets()
         
-    def applyPreset(self):
+    def applyPreset(self, varValues = None):
         op = Undoable('PresetManager Applying Preset')
         
-        curTRender = state.player.tRender
-        trk = state.track
+        curTRender = d3script.getPlayer().tRender
+        track = d3script.getCurrentTrack()
         
+        #Check for variables, if there are, go get values for them, else continue
+        if (len(self.variables) > 0) and (varValues == None):
+            PresetVariablesWidget(self)
+            return
+        
+
         for valueSet in self.fieldValues:
             modifyFields = []
             if 'type' in valueSet:
@@ -119,12 +148,20 @@ class PMPreset():
 
             for fs in modifyFields:
                 seq = fs.sequence
-                sectStartTime = trk.sections.getT(trk.beatToSection(trk.timeToBeat(curTRender)))
-                nextSectIndex = trk.beatToSection(trk.timeToBeat(curTRender)) + 1
-                if nextSectIndex < trk.nSections:
-                    nextSectStartTime = trk.sections.getT(nextSectIndex)
+                if d3script.is31_or_newer():
+                    sectStartTime = track.beatToTime(track.findBeatOfLastSection(curTRender))
+                    nextSectStartTime = track.beatToTime(track.findBeatOfNextSection(curTRender))
+                    if nextSectStartTime == track.beatToTime(track.lengthInBeats):
+                        nextSectStartTime = sectStartTime + 30
+
                 else:
-                    nextSectStartTime = sectStartTime + 30; 
+                    sectStartTime = track.sections.getT(track.beatToSection(track.timeToBeat(curTRender)))
+                    nextSectIndex = track.beatToSection(track.timeToBeat(curTRender)) + 1
+                    if nextSectIndex < track.nSections:
+                        nextSectStartTime = track.sections.getT(nextSectIndex)
+                    else:
+                        nextSectStartTime = sectStartTime + 30; 
+                
                 curValue = seq.evalString(curTRender)
                 prevKeyTime = seq.findCurrentKeyTime(curTRender)
                 nextKeyTime = seq.findNextKeyTime(curTRender)
@@ -140,6 +177,10 @@ class PMPreset():
                         value = value.replace('<nextvalue>', nextKeyValue)
                         value = value.replace('<sectvalue>', sectValue)
                         value = value.replace('<nextsectvalue>', nextSectValue)
+
+                        if varValues != None:
+                            for key in varValues:
+                                value = value.replace('<'+key+'>', varValues[key])
 
                         if setType == float:
                             value = eval(value)
@@ -169,12 +210,18 @@ class PMPreset():
                     if (isinstance(time,str) or isinstance(time,unicode)):
                         if time == '<none>':
                             return None
+                        time = time.replace('<current>', str(curTRender))
                         time = time.replace('<sectionstart>', str(sectStartTime))
                         time = time.replace('<nextsectionstart>',str(nextSectStartTime))
                         time = time.replace('<prevkeytime>', str(prevKeyTime))
                         time = time.replace('<nextkeytime>', str(nextKeyTime))
                         time = time.replace('<relativeepsilon>', str(curTRender - Key.tEpsilon))
                         time = time.replace('<epsilon>', str(Key.tEpsilon))
+
+                        if varValues != None:
+                            for key in varValues:
+                                time = time.replace('<'+key+'>', varValues[key])
+
                         return float(eval(time))
                     
                     return float(time) + curTRender
@@ -239,6 +286,49 @@ class PMPreset():
                         seq.key(seq.find(keyTime)).interpolation = key[2]
 
                 d3script.refreshEditorsForLayer(fs.layer)
+
+
+class PresetVariablesWidget(Widget):
+    """A Widget to change the section tag and note from anywhere in the section"""
+
+    def __init__(self,preset):
+        
+        Widget.__init__(self)
+
+        self.arrangeVertical()
+        self.add(TitleButton("Preset: " + preset.name))
+
+        self.preset = preset
+        self.values = {}
+
+        for var in self.preset.variables:
+            setattr(self,'value_'+var,'')
+            gw = Widget()
+            gw.arrangeHorizontal()
+            gw.add(TextLabel(var + ':'))
+            print('here')
+            print(dir(self))
+            vb = ValueBox(self,('value_'+var).encode('ascii', 'ignore'))
+            vb.textBox.returnAction.add(self.returnValues)
+            gw.add(vb)
+            self.add(gw)
+
+        self.add(Button('OK', self.returnValues))
+
+        self.pos = (d3gui.root.size / 2) - (self.size/2)
+        d3gui.root.add(self)
+        self.children[1].children[1].focus = True
+
+    def returnValues(self):
+        returnVals = {}
+        for attr_name in dir(self):
+            if attr_name.startswith('value_'):
+                retName = attr_name.replace('value_','')
+                returnVals[retName] = getattr(self, attr_name)
+        
+        self.preset.applyPreset(returnVals)
+        self.close()
+
 
 class PresetEditor(Widget):
 
@@ -414,17 +504,23 @@ class PresetRecordWidget(Widget):
 
 
                 else:
-                    trk = state.track
+                    track = d3script.getCurrentTrack()
                     keyArray = []
-                    curSection = trk.beatToSection(trk.timeToBeat(state.player.tRender))
-                    startTime = trk.sections.getT(curSection)
+                    curSection = track.beatToSection(track.timeToBeat(d3script.getPlayer().tRender))
+                    if d3script.is31_or_newer():
+                        startTime = track.beatToTime(track.findBeatOfLastSection(d3script.getPlayer().tRender))
+                    else:
+                        startTime = track.sections.getT(curSection)
 
                     if (startTime < f.fieldSequence.layer.tStart):
                         startTime = f.fieldSequence.layer.tStart
-                    if (curSection < trk.nSections):
-                        endTime = trk.sections.getT(curSection + 1)
+                    if (curSection < track.nSections):
+                        if d3script.is31_or_newer():
+                            endTime = track.beatToTime(track.findBeatOfNextSection(d3script.getPlayer().tRender))
+                        else:
+                            endTime = track.sections.getT(curSection + 1)
                     else:
-                        endTime = trk.lengthInSec
+                        endTime = track.lengthInSec
 
                     for key in filter(lambda x: (x.localT >= startTime - Key.tEpsilon) and (x.localT < endTime), f.fieldSequence.sequence.keys):
                         if (f.fieldSequence.type == float) or (f.fieldSequence.type == int):
@@ -448,7 +544,7 @@ class PresetRecordWidget(Widget):
                         saveType = globals().keys()[globals().values().index(f.fieldSequence.type)]
                     values.append({'field':f.fieldSequence.name,'flags':'','type':saveType,'keys':keyArray})    
 
-        PMPreset(self.presetName,values)
+        PMPreset(self.presetName,values,[])
         self.generatePresetRows()
 
         

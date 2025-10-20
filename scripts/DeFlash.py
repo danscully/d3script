@@ -35,7 +35,6 @@ def deFlasher(newTrack=None):
     tw.__class__.updateNetworkLockedButtonState = patchedupdateNetworkLockedButtonState
 
 def changeTransportFirstRun(action):
-    print('first run')
     tm = state.currentTransportManager
     tm.player.onSwitchPlayMode.remove(changeTransportButtons)
     tm.player.onSwitchPlayMode.remove(changeTransportFirstRun)
@@ -43,7 +42,6 @@ def changeTransportFirstRun(action):
     changeTransportButtons(action)
     
 def changeTransportButtons(action):
-    print('changing buttons')
         
     mode = action.state
     transControls = d3gui.root.findWidgetByName('buttons')
@@ -54,7 +52,6 @@ def changeTransportButtons(action):
     if transControls:
         for bt in transControls.children:
             if hasattr(bt,'flash'):
-                print('killing flash')
                 bt.flash(False)
                 bt.tint = offTint
 

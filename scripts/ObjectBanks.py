@@ -131,7 +131,9 @@ class PresetObjectView(ListView):
     def __init__(self):
         ListView.__init__(self)
         for p in PMPreset.presets:
-            self.items.append(ListViewItem(p.name))
+            if (not p.hidden):
+                self.items.append(ListViewItem(p.name))
+                
         self.arrangeVertical()
         self.contents.arrangeVertical()
         self.makeItemsDraggable(printHelper)

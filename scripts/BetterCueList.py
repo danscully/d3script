@@ -10,7 +10,7 @@ def refresh_patch(widget):
     if widget.view.items:
         oldScrollPos = widget.view.listView.vScroll.ratio
     items = []
-    setList = state.currentTransportManager.setList
+    setList = d3script.getCurrentTransportManager().setList
     widget._setList = setList
     for track in setList.tracks:
         beats = [ CueItem(track, beat, widget.view) for beat in track.noteTagSectionBeats() if widget.filter_cue(track, beat) ]

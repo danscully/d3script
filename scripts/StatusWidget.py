@@ -17,19 +17,19 @@ def toggleDirectorEngaged():
             stm.engaged = not curState
     
     else:
-        state.currentTransportManager.engaged ^= 1
+        d3script.getCurrentTransportManager().engaged ^= 1
 
 
 def toggleLtcEngaged():
 
-    if (state.currentTransportManager.timecode == None):
+    if (d3script.getCurrentTransportManager().timecode == None):
         ltc = filter(lambda x:x.description == 'ltc_main',resourceManager.allResources(TimecodeTransportLtc))
         
         if (len(ltc) == 1):
-            state.currentTransportManager.timecode = ltc[0]
+            d3script.getCurrentTransportManager().timecode = ltc[0]
     
     else:
-        state.currentTransportManager.timecode = None
+        d3script.getCurrentTransportManager().timecode = None
 
 
 def switchToLtcVor():
@@ -37,28 +37,17 @@ def switchToLtcVor():
     ltcVor = filter(lambda x:x.description == 'ltc_vor',resourceManager.allResources(TimecodeTransportLtc))
         
     if (len(ltcVor) == 1):
-        state.currentTransportManager.timecode = ltcVor[0]
+        d3script.getCurrentTransportManager().timecode = ltcVor[0]
 
 
 def toggleLockToNetwork(goToLocal = False):
     d3.state.lockedToDirector = not d3.state.lockedToDirector
-
-    if goToLocal:
-        localTrack = state.track
-        localTime = state.player.tCurrent
+    tw = d3script.getTrackWidget()  
 
     if not d3.state.lockedToDirector:
-        #Stop playing
-        tw = d3script.getTrackWidget()
         tw.children[2].children[0].children[4].clickAction.doit()
-    
-    if goToLocal:
-        cmd = TransportCMDTrackBeat()
-        tm = d3.state.currentTransportManager
-        beat = localTrack.timeToBeat(localTime)
-        #this is hack-y to use root for the parent of the command
-        cmd.init(d3gui.root, tm, localTrack, beat, localTrack.transitionInfoAtBeat(beat))
-        tm.addCommand(cmd)
+    else:
+        tw.transport.lockToDirector(tw, goToLocal)
 
 
 def BringDirectorToEditorPlayhead():
@@ -79,8 +68,8 @@ class StatusWidget(Widget):
 
         Widget.__init__(self)
 
-        self.resource = state.currentTransportManager
-        self.ltcResource = state.currentTransportManager.timecode
+        self.resource = d3script.getCurrentTransportManager()
+        self.ltcResource = self.resource.timecode
         self.arrangeHorizontal()
         self.updateAction.add(self.onUpdate)
 
@@ -149,9 +138,14 @@ class StatusWidget(Widget):
 
 
     def getTagForCurrentTime(self, stateContext):
-        trk = stateContext.track
-        ply = stateContext.currentTransport.player
-        return trk.tagAtBeat(trk.findBeatOfLastTag(trk.timeToBeat(ply.tCurrent)))
+        #ignoring state
+        trk = d3script.getCurrentTrack()
+        ply = d3script.getPlayer()
+        tags = trk.tagsAtBeat(trk.findBeatOfLastTag(trk.timeToBeat(ply.tCurrent)))
+        if len(tags) > 0:
+            return tags[0].text
+        else:
+            return ''
 
 
     def onResourceChanged(self, resource):

@@ -33,16 +33,27 @@ def _getEosPersistentValues():
 
 
 def _getTagAndNoteForSectionAtPlayhead():
-    trk = state.track
-    lastTagBeat = trk.findBeatOfLastTag(trk.timeToBeat(state.player.tCurrent))
-    tag = trk.tagAtBeat(lastTagBeat)
+
+    trk = d3script.getCurrentTrack()
+    lastTagBeat = trk.findBeatOfLastTag(trk.timeToBeat(d3script.getPlayer().tCurrent))
+    if (d3script.is31_or_newer()):
+        print('looking for tag at ' + str(lastTagBeat))
+        tags = trk.tagsAtBeat(lastTagBeat)
+        for tag in tags:
+            print (str(tag.type) + ':' + tag.text)
+        cue = tags[0].text
+        
+    else: 
+        tag = trk.tagAtBeat(lastTagBeat)
+        tagParts = tag.split(' ')
+        if (len(tagParts) != 2) or (tagParts[0] != 'CUE'):
+            cue = ''
+        else:
+            cue = tagParts[1]
+
     label = trk.noteAtBeat(lastTagBeat)
 
-    tagParts = tag.split(' ')
-    if (len(tagParts) != 2) or (tagParts[0] != 'CUE'):
-        cue = ''
-    else:
-        cue = tagParts[1]
+
 
     return cue, label
 

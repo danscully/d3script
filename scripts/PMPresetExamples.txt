@@ -1,0 +1,1099 @@
+{
+    "PM3Settings": [
+        {
+            "variables": [], 
+            "name": "fade_out_tsoft0", 
+            "fieldValues": [
+                {
+                    "keys": [
+                        [
+                            "<currentvalue>", 
+                            0.0, 
+                            2
+                        ], 
+                        [
+                            0.0, 
+                            0.2, 
+                            2
+                        ]
+                    ], 
+                    "field": "brightness", 
+                    "flags": ""
+                }
+            ]
+        }, 
+        {
+            "variables": [
+                "timeoffset"
+            ], 
+            "name": "fade_in_time", 
+            "fieldValues": [
+                {
+                    "keys": [
+                        [
+                            0.0, 
+                            0.0, 
+                            2
+                        ], 
+                        [
+                            "<currentvalue>", 
+                            "<timeoffset>+<current>", 
+                            2
+                        ]
+                    ], 
+                    "field": "brightness", 
+                    "flags": ""
+                }
+            ]
+        }, 
+        {
+            "variables": [
+                "timeoffset"
+            ], 
+            "name": "fade_out_time", 
+            "fieldValues": [
+                {
+                    "keys": [
+                        [
+                            "<currentvalue>", 
+                            0.0, 
+                            2
+                        ], 
+                        [
+                            0.0, 
+                            "<timeoffset>+<current>", 
+                            2
+                        ]
+                    ], 
+                    "field": "brightness", 
+                    "flags": ""
+                }
+            ]
+        }, 
+        {
+            "variables": [], 
+            "name": "playspeed_stop", 
+            "fieldValues": [
+                {
+                    "keys": [
+                        [
+                            "<currentvalue>", 
+                            -0.0009765625, 
+                            2
+                        ], 
+                        [
+                            0.0, 
+                            0.0, 
+                            2
+                        ]
+                    ], 
+                    "field": "speed", 
+                    "flags": ""
+                }
+            ]
+        }, 
+        {
+            "variables": [], 
+            "name": "fade_in_tsoft0", 
+            "fieldValues": [
+                {
+                    "keys": [
+                        [
+                            0.0, 
+                            0.0, 
+                            2
+                        ], 
+                        [
+                            "<nextvalue>", 
+                            0.2, 
+                            2
+                        ]
+                    ], 
+                    "field": "brightness", 
+                    "flags": ""
+                }
+            ]
+        }, 
+        {
+            "variables": [], 
+            "name": "fade_out_t1", 
+            "fieldValues": [
+                {
+                    "keys": [
+                        [
+                            "<currentvalue>", 
+                            0.0, 
+                            2
+                        ], 
+                        [
+                            0.0, 
+                            1.0, 
+                            2
+                        ]
+                    ], 
+                    "field": "brightness", 
+                    "flags": ""
+                }
+            ]
+        }, 
+        {
+            "variables": [], 
+            "name": "fade_out_t2", 
+            "fieldValues": [
+                {
+                    "keys": [
+                        [
+                            "<currentvalue>", 
+                            0.0, 
+                            2
+                        ], 
+                        [
+                            0.0, 
+                            2.0, 
+                            2
+                        ]
+                    ], 
+                    "field": "brightness", 
+                    "flags": ""
+                }
+            ]
+        }, 
+        {
+            "variables": [], 
+            "name": "fade_out_t3", 
+            "fieldValues": [
+                {
+                    "keys": [
+                        [
+                            "<currentvalue>", 
+                            0.0, 
+                            2
+                        ], 
+                        [
+                            0.0, 
+                            3.0, 
+                            2
+                        ]
+                    ], 
+                    "field": "brightness", 
+                    "flags": ""
+                }
+            ]
+        }, 
+        {
+            "variables": [], 
+            "name": "fade_out_t4", 
+            "fieldValues": [
+                {
+                    "keys": [
+                        [
+                            "<currentvalue>", 
+                            0.0, 
+                            2
+                        ], 
+                        [
+                            0.0, 
+                            4.0, 
+                            2
+                        ]
+                    ], 
+                    "field": "brightness", 
+                    "flags": ""
+                }
+            ]
+        }, 
+        {
+            "variables": [], 
+            "name": "fade_out_t5", 
+            "fieldValues": [
+                {
+                    "keys": [
+                        [
+                            "<currentvalue>", 
+                            0.0, 
+                            2
+                        ], 
+                        [
+                            0.0, 
+                            5.0, 
+                            2
+                        ]
+                    ], 
+                    "field": "brightness", 
+                    "flags": ""
+                }
+            ]
+        }, 
+        {
+            "variables": [], 
+            "name": "fade_out_t6", 
+            "fieldValues": [
+                {
+                    "keys": [
+                        [
+                            "<currentvalue>", 
+                            0.0, 
+                            2
+                        ], 
+                        [
+                            0.0, 
+                            6.0, 
+                            2
+                        ]
+                    ], 
+                    "field": "brightness", 
+                    "flags": ""
+                }
+            ]
+        }, 
+        {
+            "variables": [], 
+            "name": "fade_out_t7", 
+            "fieldValues": [
+                {
+                    "keys": [
+                        [
+                            "<currentvalue>", 
+                            0.0, 
+                            2
+                        ], 
+                        [
+                            0.0, 
+                            7.0, 
+                            2
+                        ]
+                    ], 
+                    "field": "brightness", 
+                    "flags": ""
+                }
+            ]
+        }, 
+        {
+            "variables": [], 
+            "name": "fade_out_t8", 
+            "fieldValues": [
+                {
+                    "keys": [
+                        [
+                            "<currentvalue>", 
+                            0.0, 
+                            2
+                        ], 
+                        [
+                            0.0, 
+                            8.0, 
+                            2
+                        ]
+                    ], 
+                    "field": "brightness", 
+                    "flags": ""
+                }
+            ]
+        }, 
+        {
+            "variables": [], 
+            "name": "fade_out_t9", 
+            "fieldValues": [
+                {
+                    "keys": [
+                        [
+                            "<currentvalue>", 
+                            0.0, 
+                            2
+                        ], 
+                        [
+                            0.0, 
+                            9.0, 
+                            2
+                        ]
+                    ], 
+                    "field": "brightness", 
+                    "flags": ""
+                }
+            ]
+        }, 
+        {
+            "variables": [], 
+            "name": "fade_out_t10", 
+            "fieldValues": [
+                {
+                    "keys": [
+                        [
+                            "<currentvalue>", 
+                            0.0, 
+                            2
+                        ], 
+                        [
+                            0.0, 
+                            10.0, 
+                            2
+                        ]
+                    ], 
+                    "field": "brightness", 
+                    "flags": ""
+                }
+            ]
+        }, 
+        {
+            "variables": [], 
+            "name": "fade_in_t1", 
+            "fieldValues": [
+                {
+                    "keys": [
+                        [
+                            0, 
+                            0.0, 
+                            2
+                        ], 
+                        [
+                            "<nextvalue>", 
+                            1.0, 
+                            2
+                        ]
+                    ], 
+                    "field": "brightness", 
+                    "flags": ""
+                }
+            ]
+        }, 
+        {
+            "variables": [], 
+            "name": "fade_in_t2", 
+            "fieldValues": [
+                {
+                    "keys": [
+                        [
+                            0, 
+                            0.0, 
+                            2
+                        ], 
+                        [
+                            "<nextvalue>", 
+                            2.0, 
+                            2
+                        ]
+                    ], 
+                    "field": "brightness", 
+                    "flags": ""
+                }
+            ]
+        }, 
+        {
+            "variables": [], 
+            "name": "fade_in_t3", 
+            "fieldValues": [
+                {
+                    "keys": [
+                        [
+                            0, 
+                            0.0, 
+                            2
+                        ], 
+                        [
+                            "<nextvalue>", 
+                            3.0, 
+                            2
+                        ]
+                    ], 
+                    "field": "brightness", 
+                    "flags": ""
+                }
+            ]
+        }, 
+        {
+            "variables": [], 
+            "name": "fade_in_t4", 
+            "fieldValues": [
+                {
+                    "keys": [
+                        [
+                            0, 
+                            0.0, 
+                            2
+                        ], 
+                        [
+                            "<nextvalue>", 
+                            4.0, 
+                            2
+                        ]
+                    ], 
+                    "field": "brightness", 
+                    "flags": ""
+                }
+            ]
+        }, 
+        {
+            "variables": [], 
+            "name": "fade_in_t5", 
+            "fieldValues": [
+                {
+                    "keys": [
+                        [
+                            0, 
+                            0.0, 
+                            2
+                        ], 
+                        [
+                            "<nextvalue>", 
+                            5.0, 
+                            2
+                        ]
+                    ], 
+                    "field": "brightness", 
+                    "flags": ""
+                }
+            ]
+        }, 
+        {
+            "variables": [], 
+            "name": "fade_in_t6", 
+            "fieldValues": [
+                {
+                    "keys": [
+                        [
+                            0, 
+                            0.0, 
+                            2
+                        ], 
+                        [
+                            "<nextvalue>", 
+                            6.0, 
+                            2
+                        ]
+                    ], 
+                    "field": "brightness", 
+                    "flags": ""
+                }
+            ]
+        }, 
+        {
+            "variables": [], 
+            "name": "fade_in_t7", 
+            "fieldValues": [
+                {
+                    "keys": [
+                        [
+                            0, 
+                            0.0, 
+                            2
+                        ], 
+                        [
+                            "<nextvalue>", 
+                            7.0, 
+                            2
+                        ]
+                    ], 
+                    "field": "brightness", 
+                    "flags": ""
+                }
+            ]
+        }, 
+        {
+            "variables": [], 
+            "name": "fade_in_t8", 
+            "fieldValues": [
+                {
+                    "keys": [
+                        [
+                            0, 
+                            0.0, 
+                            2
+                        ], 
+                        [
+                            "<nextvalue>", 
+                            8.0, 
+                            2
+                        ]
+                    ], 
+                    "field": "brightness", 
+                    "flags": ""
+                }
+            ]
+        }, 
+        {
+            "variables": [], 
+            "name": "fade_in_t9", 
+            "fieldValues": [
+                {
+                    "keys": [
+                        [
+                            0, 
+                            0.0, 
+                            2
+                        ], 
+                        [
+                            "<nextvalue>", 
+                            9.0, 
+                            2
+                        ]
+                    ], 
+                    "field": "brightness", 
+                    "flags": ""
+                }
+            ]
+        }, 
+        {
+            "variables": [], 
+            "name": "fade_in_t10", 
+            "fieldValues": [
+                {
+                    "keys": [
+                        [
+                            0, 
+                            0.0, 
+                            2
+                        ], 
+                        [
+                            "<nextvalue>", 
+                            10.0, 
+                            2
+                        ]
+                    ], 
+                    "field": "brightness", 
+                    "flags": ""
+                }
+            ]
+        }, 
+        {
+            "variables": [], 
+            "name": "fade_in_from_section", 
+            "fieldValues": [
+                {
+                    "keys": [
+                        [
+                            0.0, 
+                            "<sectionstart>", 
+                            2
+                        ], 
+                        [
+                            "<currentvalue>", 
+                            0.0, 
+                            2
+                        ]
+                    ], 
+                    "field": "brightness", 
+                    "flags": ""
+                }
+            ]
+        }, 
+        {
+            "variables": [], 
+            "name": "fade_out_from_section", 
+            "fieldValues": [
+                {
+                    "keys": [
+                        [
+                            "<currentvalue>", 
+                            "<sectionstart>", 
+                            2
+                        ], 
+                        [
+                            0.0, 
+                            0.0, 
+                            2
+                        ]
+                    ], 
+                    "field": "brightness", 
+                    "flags": ""
+                }
+            ]
+        }, 
+        {
+            "variables": [], 
+            "name": "fade_in_os_from_section", 
+            "fieldValues": [
+                {
+                    "keys": [
+                        [
+                            0.0, 
+                            "<sectionstart>", 
+                            2
+                        ], 
+                        [
+                            "<currentvalue>", 
+                            0.0, 
+                            2
+                        ]
+                    ], 
+                    "field": "<opensequence>", 
+                    "flags": ""
+                }
+            ]
+        }, 
+        {
+            "variables": [], 
+            "name": "fade_out_os_from_section", 
+            "fieldValues": [
+                {
+                    "keys": [
+                        [
+                            "<currentvalue>", 
+                            "<sectionstart>", 
+                            2
+                        ], 
+                        [
+                            0, 
+                            0.0, 
+                            2
+                        ]
+                    ], 
+                    "field": "<opensequence>", 
+                    "flags": ""
+                }
+            ]
+        }, 
+        {
+            "variables": [], 
+            "name": "reset_translate", 
+            "fieldValues": [
+                {
+                    "keys": [
+                        [
+                            1.0, 
+                            "<none>", 
+                            2
+                        ]
+                    ], 
+                    "field": "size", 
+                    "flags": ""
+                }, 
+                {
+                    "keys": [
+                        [
+                            1.0, 
+                            "<none>", 
+                            2
+                        ]
+                    ], 
+                    "field": "scale.x", 
+                    "flags": ""
+                }, 
+                {
+                    "keys": [
+                        [
+                            1.0, 
+                            "<none>", 
+                            2
+                        ]
+                    ], 
+                    "field": "scale.y", 
+                    "flags": ""
+                }, 
+                {
+                    "keys": [
+                        [
+                            0.0, 
+                            "<none>", 
+                            2
+                        ]
+                    ], 
+                    "field": "pos.x", 
+                    "flags": ""
+                }, 
+                {
+                    "keys": [
+                        [
+                            0.0, 
+                            "<none>", 
+                            2
+                        ]
+                    ], 
+                    "field": "pos.y", 
+                    "flags": ""
+                }, 
+                {
+                    "keys": [
+                        [
+                            0.0, 
+                            "<none>", 
+                            2
+                        ]
+                    ], 
+                    "field": "rotation", 
+                    "flags": ""
+                }
+            ]
+        }, 
+        {
+            "variables": [], 
+            "name": "color_invert", 
+            "fieldValues": [
+                {
+                    "keys": [
+                        [
+                            1.0, 
+                            "<none>", 
+                            2
+                        ]
+                    ], 
+                    "field": "red min", 
+                    "flags": ""
+                }, 
+                {
+                    "keys": [
+                        [
+                            0.0, 
+                            "<none>", 
+                            2
+                        ]
+                    ], 
+                    "field": "red max", 
+                    "flags": ""
+                }
+            ]
+        }, 
+        {
+            "variables": [], 
+            "name": "playspeed_release", 
+            "fieldValues": [
+                {
+                    "keys": [
+                        [
+                            0.0, 
+                            -0.0009765625, 
+                            2
+                        ], 
+                        [
+                            1.0, 
+                            0.0, 
+                            2
+                        ]
+                    ], 
+                    "field": "speed", 
+                    "flags": ""
+                }
+            ]
+        }, 
+        {
+            "variables": [], 
+            "name": "playspeed_zero", 
+            "fieldValues": [
+                {
+                    "keys": [
+                        [
+                            0.0, 
+                            "<none>", 
+                            2
+                        ]
+                    ], 
+                    "field": "speed", 
+                    "flags": ""
+                }
+            ]
+        }, 
+        {
+            "variables": [], 
+            "name": "block_os_currentsection", 
+            "fieldValues": [
+                {
+                    "keys": [
+                        [
+                            "<sectvalue>", 
+                            "<sectionstart> - <epsilon>", 
+                            2
+                        ], 
+                        [
+                            "<sectvalue>", 
+                            "<sectionstart>", 
+                            2
+                        ]
+                    ], 
+                    "field": "<opensequence>", 
+                    "flags": ""
+                }
+            ]
+        }, 
+        {
+            "variables": [], 
+            "name": "block_os_nextsection", 
+            "fieldValues": [
+                {
+                    "keys": [
+                        [
+                            "<currentvalue>", 
+                            "<nextsectionstart> - <epsilon>", 
+                            2
+                        ], 
+                        [
+                            "<currentvalue>", 
+                            "<nextsectionstart>", 
+                            2
+                        ]
+                    ], 
+                    "field": "<opensequence>", 
+                    "flags": ""
+                }
+            ]
+        }, 
+        {
+            "variables": [], 
+            "name": "BlendAlpha", 
+            "fieldValues": [
+                {
+                    "keys": [
+                        [
+                            1, 
+                            "<none>", 
+                            0
+                        ]
+                    ], 
+                    "field": "blendMode", 
+                    "flags": "", 
+                    "type": "int"
+                }
+            ]
+        }, 
+        {
+            "variables": [], 
+            "name": "BlendOver", 
+            "fieldValues": [
+                {
+                    "keys": [
+                        [
+                            0, 
+                            "<none>", 
+                            0
+                        ]
+                    ], 
+                    "field": "blendMode", 
+                    "flags": "", 
+                    "type": "int"
+                }
+            ]
+        }, 
+        {
+            "variables": [], 
+            "name": "BlendAdd", 
+            "fieldValues": [
+                {
+                    "keys": [
+                        [
+                            2, 
+                            "<none>", 
+                            0
+                        ]
+                    ], 
+                    "field": "blendMode", 
+                    "flags": "", 
+                    "type": "int"
+                }
+            ]
+        }, 
+        {
+            "variables": [], 
+            "name": "BlendMultiply", 
+            "fieldValues": [
+                {
+                    "keys": [
+                        [
+                            3, 
+                            "<none>", 
+                            0
+                        ]
+                    ], 
+                    "field": "blendMode", 
+                    "flags": "", 
+                    "type": "int"
+                }
+            ]
+        }, 
+        {
+            "variables": [], 
+            "name": "BlendMultFade", 
+            "fieldValues": [
+                {
+                    "keys": [
+                        [
+                            5, 
+                            "<none>", 
+                            0
+                        ]
+                    ], 
+                    "field": "blendMode", 
+                    "flags": "", 
+                    "type": "int"
+                }
+            ]
+        }, 
+        {
+            "variables": [], 
+            "name": "BlendScreen", 
+            "fieldValues": [
+                {
+                    "keys": [
+                        [
+                            8, 
+                            "<none>", 
+                            0
+                        ]
+                    ], 
+                    "field": "blendMode", 
+                    "flags": "", 
+                    "type": "int"
+                }
+            ]
+        }, 
+        {
+            "variables": [], 
+            "name": "MP: [fd-main]", 
+            "fieldValues": [
+                {
+                    "keys": [
+                        [
+                            "[fd-main]", 
+                            "<none>", 
+                            0
+                        ]
+                    ], 
+                    "field": "mapping", 
+                    "flags": "", 
+                    "type": "Projection"
+                }
+            ]
+        }, 
+        {
+            "variables": [], 
+            "name": "MP: [fd-tall]", 
+            "fieldValues": [
+                {
+                    "keys": [
+                        [
+                            "[fd-tall]", 
+                            "<none>", 
+                            0
+                        ]
+                    ], 
+                    "field": "mapping", 
+                    "flags": "", 
+                    "type": "Projection"
+                }
+            ]
+        }, 
+        {
+            "variables": [], 
+            "name": "V:White Sq SupSoft", 
+            "fieldValues": [
+                {
+                    "keys": [
+                        [
+                            "091-003-C00-white_square_supersoft", 
+                            "<none>", 
+                            0
+                        ]
+                    ], 
+                    "field": "video", 
+                    "flags": "", 
+                    "type": "VideoClip"
+                }
+            ]
+        }, 
+        {
+            "variables": [], 
+            "name": "PlaymodeLoop", 
+            "fieldValues": [
+                {
+                    "keys": [
+                        [
+                            0, 
+                            "<none>", 
+                            0
+                        ]
+                    ], 
+                    "field": "at end point", 
+                    "flags": "", 
+                    "type": "int"
+                }
+            ]
+        }, 
+        {
+            "variables": [], 
+            "name": "PlaymodePingPong", 
+            "fieldValues": [
+                {
+                    "keys": [
+                        [
+                            1, 
+                            "<none>", 
+                            0
+                        ]
+                    ], 
+                    "field": "at end point", 
+                    "flags": "", 
+                    "type": "int"
+                }
+            ]
+        }, 
+        {
+            "variables": [], 
+            "name": "PlaymodePause", 
+            "fieldValues": [
+                {
+                    "keys": [
+                        [
+                            2, 
+                            "<none>", 
+                            0
+                        ]
+                    ], 
+                    "field": "at end point", 
+                    "flags": "", 
+                    "type": "int"
+                }
+            ]
+        }, 
+        {
+            "variables": [], 
+            "name": "SaturationFull", 
+            "fieldValues": [
+                {
+                    "keys": [
+                        [
+                            1.0, 
+                            "<none>", 
+                            2
+                        ]
+                    ], 
+                    "field": "saturation scale", 
+                    "flags": "", 
+                    "type": "float"
+                }
+            ]
+        }, 
+        {
+            "variables": [], 
+            "name": "SaturationHalf", 
+            "fieldValues": [
+                {
+                    "keys": [
+                        [
+                            0.5, 
+                            "<none>", 
+                            2
+                        ]
+                    ], 
+                    "field": "saturation scale", 
+                    "flags": "", 
+                    "type": "float"
+                }
+            ]
+        }, 
+        {
+            "variables": [], 
+            "name": "SaturationZero", 
+            "fieldValues": [
+                {
+                    "keys": [
+                        [
+                            0.0, 
+                            "<none>", 
+                            2
+                        ]
+                    ], 
+                    "field": "saturation scale", 
+                    "flags": "", 
+                    "type": "float"
+                }
+            ]
+        }
+    ]
+}

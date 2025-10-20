@@ -19,9 +19,6 @@ def insertTime(time):
         alertInfo('Time in wrong format.  Should be in seconds or seconds.frames (e.g. "54" or "30.12").  No changes made.')
         return
     else:
-        print('grp 1: ' + str(timeMatch.group(1)))
-        print('grp 2: ' + str(timeMatch.group(2)))
-
         timeAmount = float(timeMatch.group(1))
 
         if timeMatch.group(2) != None:
@@ -71,7 +68,6 @@ def insertTime(time):
     def moveAnnots(timeSequence):
         numAnnots = timeSequence.n()
         for i in range(numAnnots-1, -1, -1):
-            print('Annots: ' + str(numAnnots) + ':' + str(timeSequence) + ':' + str(i))
             annotTime = timeSequence.getT(i)
             if annotTime < timeInsert:
                 #we are iterating backwards, so lets bail 

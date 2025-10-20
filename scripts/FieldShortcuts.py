@@ -34,6 +34,9 @@ def doCloseAll():
 def openVideo():
     d3script.openLayerSequenceForProperty('video')
 
+def openSaturation():
+    d3script.openLayerSequenceForProperty('saturation scale')
+
 def openOpacity():
     d3script.openLayerSequenceForProperty('brightness')
 
@@ -188,6 +191,13 @@ SCRIPT_OPTIONS = {
             "bind_globally" : True, # binding should be global
             "help_text" : "Open layer editor Colour Shift property", #text for help system
             "callback" : openColourShift, # function to call for the script
+        },{
+            "name" : "Open Saturation Property", # Display name of script
+            "group" : "Field Shortcuts", # Group to organize scripts menu.  Scripts menu is sorted a separated by group
+            "binding" : "KeyPress,Ctrl+Shift,s", # Keyboard shortcut
+            "bind_globally" : True, # binding should be global
+            "help_text" : "Open layer editor Saturation Scale property", #text for help system
+            "callback" : openSaturation, # function to call for the script
         },
         {
             "name" : "Open Crop Property", # Display name of script

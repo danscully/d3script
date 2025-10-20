@@ -101,7 +101,7 @@ class Dashboard(Widget):
                     return
         
         #Look through Modules
-        lays = filter(lambda x: x.moduleType == ExpressionVariablesModule,state.track.layers)
+        lays = filter(lambda x: (not isinstance(x, GroupLayer)) and (x.moduleType == ExpressionVariablesModule),d3script.getCurrentTrack().layers)
         for lay in lays:
             for f in lay.module.fields:
                 if f.variable.name == varName:

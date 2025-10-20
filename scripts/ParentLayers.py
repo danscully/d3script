@@ -1,8 +1,6 @@
 # Parent Layers
 from gui.inputmap import *
 from d3 import *
-import d3script
-import gui.widget
 import gui.alertbox
 import d3script
 

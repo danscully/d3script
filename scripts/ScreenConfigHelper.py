@@ -5,22 +5,22 @@ import d3script
 def initCallback():
     d3script.log("ScreenConfigHelper","ScreenConfigHelper Loaded")
 
-def getSceneryMoverLayer():
-    sceneryLayer = filter(lambda x:x.name == 'SCENERYMOVER', state.track.layers)
+def getSceneryMoverLayer(layer):
+    sceneryLayer = filter(lambda x:x.name == layer, d3script.getCurrentTrack().layers)
     if (len(sceneryLayer) != 1):
-        d3script.log('ScreenConfigHelper','Could not find SCENERYMOVER layer.  Create layer with that name to add Screen Config keys automatically')
+        d3script.log('ScreenConfigHelper','Could not find ' + layer + ' layer.  Create layer with that name to add Screen Config keys automatically')
         return None
     else:
         return sceneryLayer[0]
     
 
-def getConfigForTime(time):
-    sceneryLayer = getSceneryMoverLayer()
+def getConfigForTime(time, layer):
+    sceneryLayer = getSceneryMoverLayer(layer)
     if (sceneryLayer == None):
         return None
     
     configSeq = sceneryLayer.findSequence('config')
-    keyIndex = configSeq.sequence.find(state.player.tRender)
+    keyIndex = configSeq.sequence.find(d3script.getPlayer().tRender)
     
     if keyIndex < 0:
         return None
@@ -28,10 +28,10 @@ def getConfigForTime(time):
         return configSeq.sequence.keys[keyIndex].r
 
 
-def createOrUpdateScreenConfig(configName,addToModule=True,moveTime=5):
-    template = filter(lambda x: x.description == '_sctemplate', resourceManager.allResources(ScreenConfiguration))
+def createOrUpdateScreenConfig(configName,layer,configTemplateName,addToModule=True,moveTime=5):
+    template = filter(lambda x: x.description == configTemplateName, resourceManager.allResources(ScreenConfiguration))
     if len(template) != 1:
-        d3script.log('ScreenConfigHelper','Could not find template configuration.  Create a config named "_sctemplate" with the objects you want tracked')
+        d3script.log('ScreenConfigHelper','Could not find template configuration.  Create a config named '+configTemplateName +' with the objects you want tracked')
         return
     
     template = template[0]
@@ -53,7 +53,7 @@ def createOrUpdateScreenConfig(configName,addToModule=True,moveTime=5):
         sc.animates[i] = template.animates[i]
 
     if (addToModule):
-        sceneryLayer = getSceneryMoverLayer()
+        sceneryLayer = getSceneryMoverLayer(layer)
         if (sceneryLayer == None):
             return
 
@@ -61,26 +61,29 @@ def createOrUpdateScreenConfig(configName,addToModule=True,moveTime=5):
         if (configSeq.noSequence):
             configSeq.disableSequencing = False
         
-        curConfig = getConfigForTime(state.player.tRender)
+        player = d3script.getPlayer()
+        curConfig = getConfigForTime(player.tRender, layer)
         if (curConfig == None):
-            configSeq.sequence.setResource(state.player.tRender,sc)
+            configSeq.sequence.setResource(player.tRender,sc)
         else:
-            configSeq.sequence.setResource(state.player.tRender,curConfig)
-            configSeq.sequence.setResource(state.player.tRender + float(moveTime), sc)
+            configSeq.sequence.setResource(player.tRender,curConfig)
+            configSeq.sequence.setResource(player.tRender + float(moveTime), sc)
 
-        nextKeyTime = configSeq.sequence.findNextKeyTime(state.player.tRender + float(moveTime))
+        nextKeyTime = configSeq.sequence.findNextKeyTime(player.tRender + float(moveTime))
         
-        if nextKeyTime > (state.player.tRender + float(moveTime)):
+        if nextKeyTime > (player.tRender + float(moveTime)):
             configSeq.sequence.setResource(nextKeyTime,sc)
 
 class ScreenConfigHelperWidget(Widget):
 
-    def __init__(self):
+    def __init__(self, layer, config):
         Widget.__init__(self)
 
+        self.layer = layer
+        self.configTemplate = config
         self.add(TitleButton('Screen Config Helper'))
-        self.tRender = state.player.tRender
-        self.prevConfig = getConfigForTime(self.tRender)
+        self.tRender = d3script.getPlayer().tRender
+        self.prevConfig = getConfigForTime(self.tRender, self.layer)
         self.configName = 'New Config'
         vb = ValueBox(self,'prevConfig')
         vb.readOnly = True
@@ -98,27 +101,28 @@ class ScreenConfigHelperWidget(Widget):
         self.computeAllMinSizes()
 
     def update(self):
-        if self.tRender != state.player.tRender:
-            self.tRender = state.player.tRender
-            self.prevConfig = getConfigForTime(self.tRender)
+        player = d3script.getPlayer()
+        if self.tRender != player.tRender:
+            self.tRender = player.tRender
+            self.prevConfig = getConfigForTime(self.tRender, self.layer)
 
     def execute(self):
         if (self.updatePrevious == 1):
             resName = self.prevConfig.userInfoPath
-            createOrUpdateScreenConfig(resName,addToModule = False)
+            createOrUpdateScreenConfig(resName,self.layer,self.configTemplate, addToModule = False)
         else:
             resName = self.configName + '.apx'
-            createOrUpdateScreenConfig(resName,addToModule = True,moveTime = self.transitionTime)
+            createOrUpdateScreenConfig(resName,self.layer, self.configTemplate, addToModule = True,moveTime = self.transitionTime)
         self.close()
 
 
-def updateCurrentScreenConfig():
-    config = getConfigForTime(state.player.tRender)
+def updateCurrentScreenConfig(layer="SCENERYMOVER", config="_sctemplate"):
+    config = getConfigForTime(d3script.getPlayer().tRender,layer)
     resName = config.userInfoPath
-    createOrUpdateScreenConfig(resName,addToModule = False)
+    createOrUpdateScreenConfig(resName,layer,config.description, addToModule = False)
 
-def openScreenConfigHelperWidget():
-    d3gui.root.add(ScreenConfigHelperWidget())
+def openScreenConfigHelperWidget(layer="SCENERYMOVER", config="_sctemplate" ):
+    d3gui.root.add(ScreenConfigHelperWidget(layer, config))
 
 SCRIPT_OPTIONS = {
     "minimum_version" : 23, # Min. compatible version
